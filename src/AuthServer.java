@@ -17,8 +17,11 @@ public class AuthServer {
 		String username = "root";
 		String password = "";
 		if(args.length==3){
-			
+			host = args[0];
+			 username = args[1];
+			 password = args[2];
 		}
+		
 			
 		Class.forName("com.mysql.jdbc.Driver");
 		connect = DriverManager
