@@ -23,7 +23,7 @@ public class Message extends Thread{
 	public void send(){
 		Socket sender = null;
 		Scanner sc = null;
-
+//
 
 		try{
 			sender = new Socket("localhost", 5000);
