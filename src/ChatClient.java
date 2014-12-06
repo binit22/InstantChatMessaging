@@ -16,10 +16,8 @@ public class ChatClient extends Thread{
 	public final static String SEMICOLON = ";;";
 
 	public static int PORT = 7000;
-	public static String serverIP = "192.168.1.8";
+	public static String serverIP = "192.168.1.10";
 	public static int serverPort = 5000;
-	public static String authServerIP = "192.168.1.10";
-	public static int authServerPort = 8000;
 
 	public static DatagramSocket server = null;
 

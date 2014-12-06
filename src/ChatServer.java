@@ -1,6 +1,4 @@
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -91,34 +89,34 @@ public class ChatServer extends Thread {
 		return reply;
 	}
 
-	public void send(){
-
-		try{
-			BufferedReader inFromUser = new BufferedReader(new InputStreamReader(System.in));
-
-			byte[] sendData = null;
-			DatagramPacket packet = null;
-			String sendMsg = "";
-
-			while(true){
-				sendMsg = inFromUser.readLine();
-
-				sendData = new byte[size];
-				sendData = sendMsg.getBytes();
-				InetAddress IPAddress = InetAddress.getByName("localhost"); 
-				packet = new DatagramPacket(sendData, sendData.length, IPAddress, clientPort); 
-				server.send(packet);
-			}
-
-		} catch(IOException ex){
-			ex.printStackTrace();
-		} catch(Exception ex){
-			ex.printStackTrace();
-		} finally{
-			if(server != null)
-				server.close();
-		}
-	}
+//	public void send(){
+//
+//		try{
+//			BufferedReader inFromUser = new BufferedReader(new InputStreamReader(System.in));
+//
+//			byte[] sendData = null;
+//			DatagramPacket packet = null;
+//			String sendMsg = "";
+//
+//			while(true){
+//				sendMsg = inFromUser.readLine();
+//
+//				sendData = new byte[size];
+//				sendData = sendMsg.getBytes();
+//				InetAddress IPAddress = InetAddress.getByName("localhost"); 
+//				packet = new DatagramPacket(sendData, sendData.length, IPAddress, clientPort); 
+//				server.send(packet);
+//			}
+//
+//		} catch(IOException ex){
+//			ex.printStackTrace();
+//		} catch(Exception ex){
+//			ex.printStackTrace();
+//		} finally{
+//			if(server != null)
+//				server.close();
+//		}
+//	}
 
 	public String receive(){
 		String message = "";
@@ -130,11 +128,12 @@ public class ChatServer extends Thread {
 			while(true){
 				receiveData = new byte[size]; 
 				packet = new DatagramPacket(receiveData, receiveData.length); 
+				System.out.println("waiting");
 				server.receive(packet);
 
 				// message command received from either client or server or bootstrap
 				message = new String(packet.getData()).trim(); 
-				//				System.out.println(message);
+				System.out.println(message);
 
 				byte[] sendData = null;
 				//				DatagramPacket packet = null;
@@ -142,7 +141,7 @@ public class ChatServer extends Thread {
 
 				// authenticate from authentication server for login
 				if(message != null && message.contains("authenticate")){
-
+//					System.out.println("authenticating");
 					sendMsg = this.verifyUser(message);
 
 					// add username and its IP address in active user list
@@ -177,7 +176,7 @@ public class ChatServer extends Thread {
 				else{
 					sendData = new byte[size];
 					String[] userMsg = message.split(SEMICOLON);
-					
+
 					sendData = (activeIPList.get(packet.getAddress().getHostAddress())+": "+userMsg[1]).getBytes();
 					InetAddress IPAddress = InetAddress.getByName(activeUserList.get(userMsg[0]));
 					packet = new DatagramPacket(sendData, sendData.length, IPAddress, clientPort); 
@@ -199,7 +198,7 @@ public class ChatServer extends Thread {
 	public static void main(String[] args) {
 		ChatServer receive = new ChatServer();
 		receive.start();
-		receive.send();
+//		receive.send();
 
 	}
 }
