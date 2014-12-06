@@ -1,3 +1,5 @@
+import java.io.IOException;
+import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
 import java.sql.Connection;
@@ -8,17 +10,18 @@ import java.sql.ResultSet;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.sql.Statement;
+import java.util.Scanner;
 
-public class AuthServer {
+public class AuthServer extends Thread {
 	String serverAdd;
 	String sqlHost;
 	String sqlUsername;
 	String sqlPassword;
-	int PORT = 8000;
 	DatagramSocket ds;
+	int size = 2048;
 
 	public AuthServer(String serverAdd, String sqlHost, String sqlUsername,
-			String sqlPassword) throws SocketException {
+			String sqlPassword,int PORT) throws SocketException {
 		this.serverAdd = serverAdd;
 		this.sqlHost = sqlHost;
 		this.sqlPassword = sqlPassword;
@@ -39,7 +42,7 @@ public class AuthServer {
 		return sb.toString();
 	}
 
-	public boolean authUser(String user, String pass)
+	public String authUser(String user, String pass)
 			throws ClassNotFoundException, SQLException {
 		Connection connect = null;
 		Statement statement = null;
@@ -53,13 +56,19 @@ public class AuthServer {
 		statement = connect.createStatement();
 		resultSet = statement
 				.executeQuery("select count(1) as cnt from chat.userinfo where username='"
-						+ user + "'");
+						+ user + "' and password='" + pass + "';");
+		System.out
+				.println("select count(1) as cnt from chat.userinfo where username='"
+						+ user + "' and password='" + pass + "';");
 		while (resultSet.next()) {
 
 			if (resultSet.getInt("cnt") == 1)
 				found = true;
 		}
-		return found;
+		if (found)
+			return "true";
+		else
+			return "false";
 	}
 
 	public static void main(String[] args) throws ClassNotFoundException,
@@ -76,10 +85,16 @@ public class AuthServer {
 		}
 		if (args.length > 1 && args.length < 4)
 			usage();
-		AuthServer as = new AuthServer(server, host, uname, pass);
-		if (as.authUser("binit", "1630937c3d00b4f4b153599d93469963"))
-			System.out.println("found binit");
-		System.out.println(as.genSHA256("sadhvani"));
+		
+		Scanner sc=new Scanner(System.in);
+		System.out.println("Enter port to listen on:");
+		int PORT=Integer.parseInt(sc.nextLine());
+		
+		AuthServer as = new AuthServer(server, host, uname, pass,PORT);
+		as.start();
+		// if (as.authUser("binit", "1630937c3d00b4f4b153599d93469963"))
+		// System.out.println("found binit");
+		// System.out.println(as.genSHA256("sadhvani"));
 	}
 
 	/**
@@ -96,10 +111,45 @@ public class AuthServer {
 		throw new IllegalArgumentException();
 	}
 
-	public void run() {
+	public void receive() throws IOException, ClassNotFoundException,
+			SQLException {
+		byte[] receiveData = null;
+		byte[] sendData = null;
+
+		DatagramPacket receivePacket = null;
+		DatagramPacket sendPacket = null;
 
 		while (true) {
-			
+			String uname = "";
+			String pass = "";
+			receiveData = new byte[size];
+			receivePacket = new DatagramPacket(receiveData, receiveData.length);
+
+			ds.receive(receivePacket);
+			System.out.println(receivePacket.getAddress().toString()
+					+ " server connected.");
+			uname = new String(receivePacket.getData()).trim();
+			receiveData = new byte[size];
+
+			receivePacket = new DatagramPacket(receiveData, receiveData.length);
+			pass = new String(receivePacket.getData()).trim();
+			sendData = new byte[size];
+			sendData = authUser(uname, pass).getBytes();
+			System.out.println(authUser(uname, pass));
+			sendPacket = new DatagramPacket(sendData, sendData.length,
+					receivePacket.getAddress(), 7000);
+			ds.send(sendPacket);
+			ds.close();
+
 		}
+	}
+
+	public void run() {
+		try {
+			this.receive();
+		} catch (IOException | ClassNotFoundException | SQLException e) {
+			e.printStackTrace();
+		}
+
 	}
 }
