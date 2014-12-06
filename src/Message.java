@@ -1,101 +1,91 @@
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.PrintWriter;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.util.Scanner;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.SocketException;
 
 
 public class Message extends Thread{
 
 	public String type;
-	public ObjectOutputStream to = null;
-	public ObjectInputStream from = null;
-	PrintWriter out = null;
-
-	public Message(String type){
-		this.type = type;
+	public static int PORT = 7000;
+	public static int serverPort = 5000;
+	public DatagramSocket server = null;
+	
+	public final static int size = 2048;
+			
+	public Message(){
+		try {
+			server = new DatagramSocket(PORT);
+			
+		} catch (SocketException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public void send(){
-		Socket sender = null;
-		Scanner sc = null;
-//
+		
 
 		try{
-			sender = new Socket("localhost", 5000);
-//			to = new ObjectOutputStream(sender.getOutputStream());
-			out = new PrintWriter(sender.getOutputStream(), true);
+			BufferedReader inFromUser = new BufferedReader(new InputStreamReader(System.in));
 			
-			sc = new Scanner("System.in");
+			byte[] sendData = null;
+			DatagramPacket packet = null;
 			String sendMsg = "";
-			while(true){
-				sendMsg = sc.next();
-				out.println(sendMsg);
-				out.flush();
-//				to.writeObject(sendMsg);
-			}
 			
+			while(true){
+				sendMsg = inFromUser.readLine();
+				
+				sendData = new byte[size];
+				sendData = sendMsg.getBytes();
+				InetAddress IPAddress = InetAddress.getByName("localhost"); 
+				packet = new DatagramPacket(sendData, sendData.length, IPAddress, serverPort); 
+				server.send(packet);
+			}
+
 		} catch(IOException ex){
 			ex.printStackTrace();
 		} catch(Exception ex){
 			ex.printStackTrace();
 		} finally{
-			try {
-				sender.close();
-				sc.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+				if(server != null)
+					server.close();
 		}
 	}
 
 	public String receive(){
 		String message = "";
-		Socket receiver = null;
-		ServerSocket server = null;
 		try{
-			server = new ServerSocket(5000);
-			receiver = server.accept();
 			
-			BufferedReader in = new BufferedReader(new InputStreamReader(receiver.getInputStream()));
-			from = new ObjectInputStream(receiver.getInputStream());
-
+			byte[] receiveData = null;
+			DatagramPacket receivePacket = null;
+			
 			while(true){
-//				message = from.readObject();
-				message = in.readLine();
+				receiveData = new byte[size]; 
+				receivePacket = new DatagramPacket(receiveData, receiveData.length); 
+				server.receive(receivePacket); 
+
+				// message command received from either client or server or bootstrap
+				message = new String(receivePacket.getData()).trim(); 
 				System.out.println(message);
 			}
 		} catch(Exception ex){
 			ex.printStackTrace();
 		} finally{
-			try {
-				server.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
 		}
 		return message;
 	}
 
 	public void run(){
-		if(this.type.equals("send")){
 			this.send();
-
-		}else if(this.type.equals("receive")){
-			this.receive();
-		}
 	}
 
 	public static void main(String[] args) {
-
-		Thread send = new Message("send");
-		Thread receive = new Message("receive");
-		send.start();
-		receive.start();
-
+		Message client = new Message();
+		client.start();
+		client.receive();
+		
 	}
 }
