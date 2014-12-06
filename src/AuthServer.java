@@ -5,9 +5,7 @@ import java.net.SocketException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.sql.Statement;
 import java.util.Scanner;
@@ -29,24 +27,12 @@ public class AuthServer extends Thread {
 		ds = new DatagramSocket(PORT);
 	}
 
-	public String genSHA256(String original) throws NoSuchAlgorithmException {
 
-		MessageDigest md = MessageDigest.getInstance("SHA-256");
-		md.update(original.getBytes());
-		byte[] digest = md.digest();
-		StringBuffer sb = new StringBuffer();
-		for (byte b : digest) {
-			sb.append(String.format("%02x", b & 0xff));
-		}
-
-		return sb.toString();
-	}
 
 	public String authUser(String user, String pass)
 			throws ClassNotFoundException, SQLException {
 		Connection connect = null;
 		Statement statement = null;
-		PreparedStatement preparedStatement = null;
 		ResultSet resultSet = null;
 		boolean found = false;
 		Class.forName("com.mysql.jdbc.Driver");
