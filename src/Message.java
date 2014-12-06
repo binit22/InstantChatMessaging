@@ -5,6 +5,8 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 
 public class Message extends Thread{
@@ -25,8 +27,20 @@ public class Message extends Thread{
 		}
 	}
 
+	public String genSHA256(String original) throws NoSuchAlgorithmException {
+
+		MessageDigest md = MessageDigest.getInstance("SHA-256");
+		md.update(original.getBytes());
+		byte[] digest = md.digest();
+		StringBuffer sb = new StringBuffer();
+		for (byte b : digest) {
+			sb.append(String.format("%02x", b & 0xff));
+		}
+
+		return sb.toString();
+	}
+	
 	public void send(){
-		
 
 		try{
 			BufferedReader inFromUser = new BufferedReader(new InputStreamReader(System.in));
