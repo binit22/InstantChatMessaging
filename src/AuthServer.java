@@ -1,8 +1,12 @@
+import java.net.DatagramSocket;
+import java.net.SocketException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.sql.Statement;
 
 public class AuthServer {
@@ -10,13 +14,29 @@ public class AuthServer {
 	String sqlHost;
 	String sqlUsername;
 	String sqlPassword;
+	int PORT = 8000;
+	DatagramSocket ds;
 
 	public AuthServer(String serverAdd, String sqlHost, String sqlUsername,
-			String sqlPassword) {
+			String sqlPassword) throws SocketException {
 		this.serverAdd = serverAdd;
 		this.sqlHost = sqlHost;
 		this.sqlPassword = sqlPassword;
 		this.sqlUsername = sqlUsername;
+		ds = new DatagramSocket(PORT);
+	}
+
+	public String genSHA256(String original) throws NoSuchAlgorithmException {
+
+		MessageDigest md = MessageDigest.getInstance("SHA-256");
+		md.update(original.getBytes());
+		byte[] digest = md.digest();
+		StringBuffer sb = new StringBuffer();
+		for (byte b : digest) {
+			sb.append(String.format("%02x", b & 0xff));
+		}
+
+		return sb.toString();
 	}
 
 	public boolean authUser(String user, String pass)
@@ -43,7 +63,7 @@ public class AuthServer {
 	}
 
 	public static void main(String[] args) throws ClassNotFoundException,
-			SQLException {
+			SQLException, NoSuchAlgorithmException, SocketException {
 
 		String host = "localhost:3307";
 		String uname = "root";
@@ -59,6 +79,7 @@ public class AuthServer {
 		AuthServer as = new AuthServer(server, host, uname, pass);
 		if (as.authUser("binit", "1630937c3d00b4f4b153599d93469963"))
 			System.out.println("found binit");
+		System.out.println(as.genSHA256("sadhvani"));
 	}
 
 	/**
@@ -78,7 +99,7 @@ public class AuthServer {
 	public void run() {
 
 		while (true) {
-
+			
 		}
 	}
 }
