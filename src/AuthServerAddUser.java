@@ -71,5 +71,19 @@ public class AuthServerAddUser {
 
 		return sb.toString();
 	}
+	
+	/**
+	 * Print usage message
+	 */
+	public static void usage() {
+		System.err.println("USAGE:");
+		System.err
+				.println("java AuthServer serverAddress sqlhost sqlusername sqlpassword");
+		System.err
+				.println("OR\njava AuthServer serverAddress\n(default values are taken for the rest)");
+
+		System.err.println("OR\njava AuthServer\n(default values are taken)");
+		throw new IllegalArgumentException();
+	}
 
 }
