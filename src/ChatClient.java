@@ -13,8 +13,10 @@ import java.util.ArrayList;
 public class ChatClient extends Thread{
 
 	public final static int size = 2048;
+	public final static String SEMICOLON = ";;";
+
 	public static int PORT = 7000;
-	public static String serverIP = "localhost";
+	public static String serverIP = "192.168.1.8";
 	public static int serverPort = 5000;
 	public static String authServerIP = "192.168.1.10";
 	public static int authServerPort = 8000;
@@ -22,6 +24,7 @@ public class ChatClient extends Thread{
 	public static DatagramSocket server = null;
 
 	public String type;
+	public String toUser;
 
 	public ChatClient(String type){
 		try {
@@ -53,7 +56,7 @@ public class ChatClient extends Thread{
 			InetAddress IPAddress = InetAddress.getByName(serverIP);
 
 			data = new byte[size];
-			data = ("authenticate;;"+username+";;"+password).getBytes();
+			data = ("authenticate"+SEMICOLON+username+SEMICOLON+password).getBytes();
 			packet = new DatagramPacket(data, data.length, IPAddress, serverPort); 
 			server.send(packet);
 
@@ -69,7 +72,7 @@ public class ChatClient extends Thread{
 			ex.printStackTrace();
 		}
 
-		if(packet != null && "true".equals(reply))
+		if("true".equals(reply))
 			return true;
 		else
 			return false;
@@ -85,7 +88,7 @@ public class ChatClient extends Thread{
 			InetAddress IPAddress = InetAddress.getByName(serverIP);
 
 			data = new byte[size];
-			data = ("verify;;"+username).getBytes();
+			data = ("verify"+SEMICOLON+username).getBytes();
 			packet = new DatagramPacket(data, data.length, IPAddress, serverPort); 
 			server.send(packet);
 
@@ -101,7 +104,7 @@ public class ChatClient extends Thread{
 			ex.printStackTrace();
 		}
 
-		if(packet != null && "true".equals(reply))
+		if("true".equals(reply))
 			return true;
 		else
 			return false;
@@ -121,7 +124,7 @@ public class ChatClient extends Thread{
 				sendMsg = inFromUser.readLine();
 
 				sendData = new byte[size];
-				sendData = sendMsg.getBytes();
+				sendData = (this.toUser+SEMICOLON+sendMsg).getBytes();
 				InetAddress IPAddress = InetAddress.getByName(serverIP); 
 				packet = new DatagramPacket(sendData, sendData.length, IPAddress, serverPort); 
 				server.send(packet);
@@ -194,7 +197,9 @@ public class ChatClient extends Thread{
 							String toUsername = inFromUser.readLine();
 							if(clientSend.userExists(toUsername)){
 								//								System.out.println("start chatting");
+								clientSend.toUser = toUsername;
 								clientSend.start();
+								clientReceive.start();
 								break;
 							} else{
 								System.out.println("invalid user");
@@ -203,6 +208,7 @@ public class ChatClient extends Thread{
 						}
 						else{
 							clientReceive.start();
+							clientSend.start();
 							break;
 						}
 					}

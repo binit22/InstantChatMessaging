@@ -5,28 +5,35 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
+import java.util.HashMap;
+import java.util.Map;
 
 
 public class ChatServer extends Thread {
 
+	public final static int size = 2048;
+	public final static String SEMICOLON = ";;";
+
 	public String type;
+	public Map<String, String> activeUserList = new HashMap<String, String>();
+	public Map<String, String> activeIPList = new HashMap<String, String>();
+
 	public static int PORT = 5000;
 	public static int clientPort = 7000;
 	public static String authServerIP = "192.168.1.10";
 	public static int authServerPort = 8000;
-
-	public DatagramSocket server = null;
-
-	public final static int size = 2048;
+	public static DatagramSocket server = null;
 
 	public ChatServer(){
 		try {
-			server = new DatagramSocket(PORT);
+			if(server == null)
+				server = new DatagramSocket(PORT);
 		} catch (SocketException e) {
 			e.printStackTrace();
 		}
 	}
 
+	// to login
 	public String verifyUser(String user){
 
 		String reply = null;
@@ -55,6 +62,7 @@ public class ChatServer extends Thread {
 		return reply;
 	}
 
+	// to chat with the user
 	public String userExists(String username){
 
 		String reply = null;
@@ -114,9 +122,8 @@ public class ChatServer extends Thread {
 
 	public String receive(){
 		String message = "";
+
 		try{
-
-
 			byte[] receiveData = null;
 			DatagramPacket packet = null;
 
@@ -127,16 +134,39 @@ public class ChatServer extends Thread {
 
 				// message command received from either client or server or bootstrap
 				message = new String(packet.getData()).trim(); 
-//				System.out.println(message);
+				//				System.out.println(message);
 
 				byte[] sendData = null;
 				//				DatagramPacket packet = null;
 				String sendMsg = "";
 
-				// authenticate from authentication server
+				// authenticate from authentication server for login
 				if(message != null && message.contains("authenticate")){
 
 					sendMsg = this.verifyUser(message);
+
+					// add username and its IP address in active user list
+					if("true".equals(sendMsg)){
+						synchronized(activeUserList){
+							activeUserList.put(message.split(SEMICOLON)[1], packet.getAddress().getHostAddress());
+							activeIPList.put(packet.getAddress().getHostAddress(), message.split(SEMICOLON)[1]);
+						}
+					}
+
+					sendData = new byte[size];
+					sendData = sendMsg.getBytes();
+					InetAddress IPAddress = packet.getAddress(); 
+					packet = new DatagramPacket(sendData, sendData.length, IPAddress, packet.getPort()); 
+					server.send(packet);
+
+				}// authenticate from authentication server for chat
+				else if(message != null && message.contains("verify")){
+
+					if(activeUserList.containsKey(message.split(SEMICOLON)[1])){
+						sendMsg = "true";
+					}
+					else
+						sendMsg = this.userExists(message);
 
 					sendData = new byte[size];
 					sendData = sendMsg.getBytes();
@@ -144,13 +174,13 @@ public class ChatServer extends Thread {
 					packet = new DatagramPacket(sendData, sendData.length, IPAddress, packet.getPort()); 
 					server.send(packet);
 				}
-				else if(message != null && message.contains("verify")){
-					sendMsg = this.userExists(message);
-
+				else{
 					sendData = new byte[size];
-					sendData = sendMsg.getBytes();
-					InetAddress IPAddress = packet.getAddress(); 
-					packet = new DatagramPacket(sendData, sendData.length, IPAddress, packet.getPort()); 
+					String[] userMsg = message.split(SEMICOLON);
+					
+					sendData = (activeIPList.get(packet.getAddress().getHostAddress())+": "+userMsg[1]).getBytes();
+					InetAddress IPAddress = InetAddress.getByName(activeUserList.get(userMsg[0]));
+					packet = new DatagramPacket(sendData, sendData.length, IPAddress, clientPort); 
 					server.send(packet);
 				}
 
