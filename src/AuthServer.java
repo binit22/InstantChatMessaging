@@ -184,14 +184,14 @@ public class AuthServer extends Thread {
 
 				else if (u[0].equals("verify")) {
 					sendData = new byte[size];
-
+					// verify if user exists
 					sendData = verifyUser(u[1]).trim().getBytes();
 					if (verifyUser(u[1]).equals("true"))
 						System.out.println("User " + u[1] + " verified.");
 					else
 						System.out.println("User " + u[1]
 								+ " cannot be verified.");
-
+					// send packet containing information about user verification
 					sendPacket = new DatagramPacket(sendData, sendData.length,
 							receivePacket.getAddress(), serverPort);
 					ds.send(sendPacket);
