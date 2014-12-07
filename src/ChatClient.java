@@ -1,7 +1,10 @@
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.ObjectInput;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.math.BigInteger;
@@ -14,8 +17,12 @@ import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.crypto.spec.DHParameterSpec;
 import javax.crypto.spec.DHPublicKeySpec;
@@ -26,25 +33,173 @@ public class ChatClient extends Thread {
 	public final static String SEMICOLON = ";;";
 	public final static int pValue = 47;
 	public final static int gValue = 71;
-	  
+
 	public static int PORT = 7000;
 	public static String serverIP = "berry.cs.rit.edu";
 	public static int serverPort = 5000;
 
 	public static DatagramSocket server = null;
-	//
+
 	public String type;
 	public String toUser;
 
-	public ChatClient(String type, String server1) {
+	// username, secret key
+	public static Map<String, String> secretKey = new HashMap<String, String>();
+
+	public ChatClient(String type, String serverIP) {
 		try {
 			this.type = type;
-			this.serverIP = server1;
+			ChatClient.serverIP = serverIP;
 			if (server == null)
 				server = new DatagramSocket(PORT);
 		} catch (SocketException e) {
 			e.printStackTrace();
 		}
+	}
+
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public PrivateKey sendPublicKey(){
+		byte[] sendData = null;
+		DatagramPacket packet = null;
+		InetAddress IPAddress = null;
+		KeyPair kp = null;
+		
+		try{
+			IPAddress = InetAddress.getByName(serverIP);
+
+			sendData = new byte[size];
+			sendData = "key".getBytes();
+			packet = new DatagramPacket(sendData, sendData.length, IPAddress, serverPort);
+			server.send(packet);
+
+			BigInteger p = new BigInteger(Integer.toString(pValue));
+			BigInteger g = new BigInteger(Integer.toString(gValue));
+			int bitLength = 512; // 512 bits
+			SecureRandom rnd = new SecureRandom();
+			p = BigInteger.probablePrime(bitLength, rnd);
+			g = BigInteger.probablePrime(bitLength, rnd);
+
+			DHParameterSpec param = new DHParameterSpec(p, g);
+			KeyPairGenerator kpg = KeyPairGenerator.getInstance("DiffieHellman");
+			kpg.initialize(param);
+			kp = kpg.generateKeyPair();
+
+			KeyFactory kfactory = KeyFactory.getInstance("DiffieHellman");
+
+			DHPublicKeySpec kspec = (DHPublicKeySpec) kfactory.getKeySpec(kp.getPublic(), DHPublicKeySpec.class);
+
+			ArrayList key = new ArrayList();
+			key.add(this.toUser);
+			key.add(p);
+			key.add(g);
+			key.add(kp.getPublic());
+
+			ByteArrayOutputStream b = new ByteArrayOutputStream();
+			ObjectOutput o = null;
+			o = new ObjectOutputStream(b);
+			o.writeObject(key);
+			byte[] by = b.toByteArray();
+
+			o.close();
+			b.close();
+
+			sendData = by;
+			packet = new DatagramPacket(sendData, sendData.length, IPAddress, serverPort);
+			server.send(packet);
+			System.out.println(p);
+			System.out.println(g);
+			System.out.println(kp.getPublic());
+		} catch(Exception ex){
+			ex.printStackTrace();
+		}
+		return kp.getPrivate();
+	}
+	public void send() {
+
+		byte[] sendData = null;
+		DatagramPacket packet = null;
+		String sendMsg = "";
+		InetAddress IPAddress = null;
+
+		try {
+			BufferedReader inFromUser = new BufferedReader(new InputStreamReader(System.in));
+
+			if(!secretKey.containsKey(this.toUser)){
+
+				PrivateKey privateKey = sendPublicKey();
+			}
+			else{
+				secretKey.get(this.toUser);
+			}
+
+			System.out.println("Start sending messages");
+			while (true) {
+				sendMsg = inFromUser.readLine();
+
+				sendData = new byte[size];
+				sendData = (this.toUser + SEMICOLON + sendMsg).getBytes();
+				IPAddress = InetAddress.getByName(serverIP);
+				packet = new DatagramPacket(sendData, sendData.length, IPAddress, serverPort);
+				server.send(packet);
+			}
+
+
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		} finally {
+			if (server != null)
+				server.close();
+		}
+	}
+
+	@SuppressWarnings("rawtypes")
+	public String receive() {
+		String message = "";
+		try {
+
+			byte[] receiveData = null;
+			DatagramPacket packet = null;
+
+			while (true) {
+				receiveData = new byte[size];
+				packet = new DatagramPacket(receiveData,	receiveData.length);
+				server.receive(packet);
+
+				// message command received from either client or server or
+				// bootstrap
+				message = new String(packet.getData()).trim();
+				
+				if(message.contains("publickey")){
+					receiveData = new byte[size];
+
+					packet = new DatagramPacket(receiveData, receiveData.length);
+					server.receive(packet);
+					ByteArrayInputStream bi = new ByteArrayInputStream(receiveData);
+					ObjectInput oi = new ObjectInputStream(bi);
+
+					ArrayList ar = (ArrayList) oi.readObject();
+					String user = (String) ar.get(0);
+					BigInteger p = (BigInteger) ar.get(1);
+					BigInteger g = (BigInteger) ar.get(2);
+					PublicKey pk = (PublicKey) ar.get(3);
+					System.out.println(user);
+
+					System.out.println(p);
+					System.out.println(g);
+					System.out.println(pk);
+					
+				}
+				else{
+				System.out.println(message);
+				}
+			}
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		} finally {
+		}
+		return message;
 	}
 
 	public String genSHA256(String original) throws NoSuchAlgorithmException {
@@ -126,109 +281,6 @@ public class ChatClient extends Thread {
 			return false;
 	}
 
-	public void send() {
-
-		try {
-			BufferedReader inFromUser = new BufferedReader(
-					new InputStreamReader(System.in));
-
-			byte[] sendData = null;
-			DatagramPacket packet = null;
-			String sendMsg = "";
-			
-			sendData = new byte[size];
-			sendData = "key".getBytes();
-			InetAddress IPAddress = InetAddress.getByName(serverIP);
-			packet = new DatagramPacket(sendData, sendData.length, IPAddress, serverPort);
-			server.send(packet);
-			
-			BigInteger p = new BigInteger(Integer.toString(pValue));
-			BigInteger g = new BigInteger(Integer.toString(gValue));
-			int bitLength = 512; // 512 bits
-		    SecureRandom rnd = new SecureRandom();
-		    p = BigInteger.probablePrime(bitLength, rnd);
-		    g = BigInteger.probablePrime(bitLength, rnd);
-			
-		    DHParameterSpec param = new DHParameterSpec(p, g);
-		    KeyPairGenerator kpg = KeyPairGenerator.getInstance("DiffieHellman");
-		    kpg.initialize(param);
-		    KeyPair kp = kpg.generateKeyPair();
-
-		    KeyFactory kfactory = KeyFactory.getInstance("DiffieHellman");
-
-		    DHPublicKeySpec kspec = (DHPublicKeySpec) kfactory.getKeySpec(kp.getPublic(), DHPublicKeySpec.class);
-			
-		    ArrayList key = new ArrayList();
-		    key.add(this.toUser);
-		    key.add(p);
-		    key.add(g);
-		    key.add(kp.getPublic());
-		    
-		    ByteArrayOutputStream b = new ByteArrayOutputStream();
-			ObjectOutput o = null;
-			o = new ObjectOutputStream(b);
-			o.writeObject(key);
-			byte[] by = b.toByteArray();
-
-			o.close();
-			b.close();
-			
-		    sendData = by;
-//			sendData = (this.toUser + SEMICOLON + sendMsg).getBytes();
-//			InetAddress IPAddress = InetAddress.getByName(serverIP);
-			packet = new DatagramPacket(sendData, sendData.length, IPAddress, serverPort);
-			server.send(packet);
-		    
-			System.out.println(p);
-			System.out.println(g);
-			System.out.println(kp.getPublic());
-			
-			System.out.println("Start sending messages");
-			while (true) {
-				sendMsg = inFromUser.readLine();
-
-				sendData = new byte[size];
-				sendData = (this.toUser + SEMICOLON + sendMsg).getBytes();
-//				InetAddress IPAddress = InetAddress.getByName(serverIP);
-				packet = new DatagramPacket(sendData, sendData.length, IPAddress, serverPort);
-				server.send(packet);
-			}
-
-		} catch (IOException ex) {
-			ex.printStackTrace();
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		} finally {
-			if (server != null)
-				server.close();
-		}
-	}
-
-	public String receive() {
-		String message = "";
-		try {
-
-			byte[] receiveData = null;
-			DatagramPacket receivePacket = null;
-
-			while (true) {
-				receiveData = new byte[size];
-				receivePacket = new DatagramPacket(receiveData,
-						receiveData.length);
-				server.receive(receivePacket);
-
-				// message command received from either client or server or
-				// bootstrap
-				message = new String(receivePacket.getData()).trim();
-				System.out.println(message);
-			}
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		} finally {
-		}
-		return message;
-	}
-
 	public void run() {
 		if ("send".equals(this.type))
 			this.send();
@@ -306,7 +358,7 @@ public class ChatClient extends Thread {
 
 		System.err.println("java ChatClient SERVERADDRESS");
 		System.err
-				.println("If no SERVERADDRESS specified, default will be taken.");
+		.println("If no SERVERADDRESS specified, default will be taken.");
 		throw new IllegalArgumentException();
 
 	}
