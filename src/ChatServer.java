@@ -219,18 +219,19 @@ public class ChatServer extends Thread {
 					InetAddress IPAddress = InetAddress
 							.getByName(activeUserList.get(user));
 
-					packet = new DatagramPacket(sendData, sendData.length,
-							IPAddress, clientPort);
 					System.out.println("P, G and Public Key transfer from "
 							+ activeIPList.get(packet.getAddress()) + " to "
 							+ user);
+
+					packet = new DatagramPacket(sendData, sendData.length,
+							IPAddress, clientPort);
 					server.send(packet);
 
 					ar.set(0, (String) activeIPList.get(packet.getAddress()));
 					ByteArrayOutputStream b = new ByteArrayOutputStream();
 					ObjectOutput o = new ObjectOutputStream(b);
 					o.writeObject(ar);
-
+//
 					sendData = b.toByteArray();
 					o.close();
 					b.close();
