@@ -132,14 +132,14 @@ public class ChatServer extends Thread {
 	// }
 	// }
 
-	public String receive() {
+	public void receive() {
 		String message = "";
 
-		try {
-			byte[] receiveData = null;
-			DatagramPacket packet = null;
+		byte[] receiveData = null;
+		DatagramPacket packet = null;
 
-			while (true) {
+		while (true) {
+			try {
 				receiveData = new byte[size];
 				packet = new DatagramPacket(receiveData, receiveData.length);
 				System.out.println("waiting");
@@ -202,7 +202,7 @@ public class ChatServer extends Thread {
 							receiveData);
 					ObjectInput oi = new ObjectInputStream(bi);
 
-					ArrayList<Object> ar = (ArrayList<Object>) oi.readObject();
+					ArrayList ar = (ArrayList) oi.readObject();
 					String user = (String) ar.get(0);
 					BigInteger p = (BigInteger) ar.get(1);
 					BigInteger g = (BigInteger) ar.get(2);
@@ -227,12 +227,11 @@ public class ChatServer extends Thread {
 
 				}
 
+			} catch (Exception ex) {
+				ex.printStackTrace();
+			} finally {
 			}
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		} finally {
 		}
-		return message;
 	}
 
 	public void run() {
