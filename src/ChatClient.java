@@ -20,7 +20,7 @@ public class ChatClient extends Thread{
 	public static int serverPort = 5000;
 
 	public static DatagramSocket server = null;
-
+//
 	public String type;
 	public String toUser;
 
