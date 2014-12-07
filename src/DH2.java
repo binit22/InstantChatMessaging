@@ -21,7 +21,9 @@ import javax.crypto.spec.DHParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 public class DH2 {
-
+	String abc;
+////
+	//ldlas
 	public static void main(String args[]) throws NoSuchAlgorithmException,
 			InvalidParameterSpecException, InvalidAlgorithmParameterException,
 			InvalidKeyException, IllegalStateException, NoSuchPaddingException,
@@ -41,35 +43,11 @@ public class DH2 {
 		PublicKey pubKey1 = kpair1.getPublic();
 		PublicKey pubKey = kpair.getPublic();
 
-		
-		System.out.println(pubKey1);
-		System.out.println(pubKey);
+		SecretKeySpec secret_alice = combine(priKey1,
+				pubKey);
 
-		// kpair = keyGenerator.genKeyPair();
-		// PrivateKey pubKey = kpair.getPrivate();
-/*
-		PublicKey pubKey1 = kpair1.getPublic();
-	
-		KeyPairGenerator keyGen = KeyPairGenerator.getInstance("DiffieHellman");
-		AlgorithmParameterGenerator paramGen = AlgorithmParameterGenerator
-				.getInstance("DiffieHellman");
-		paramGen.init(1024);
-
-		// Generate the parameters
-		AlgorithmParameters params = paramGen.generateParameters();
-		DHParameterSpec dhSpec = (DHParameterSpec) params
-				.getParameterSpec(DHParameterSpec.class);
-
-		keyGen.initialize(dhSpec);
-
-		KeyPair alice_key = keyGen.generateKeyPair();
-		KeyPair bob_key = keyGen.generateKeyPair();
-
-		SecretKeySpec secret_alice = combine(alice_key.getPrivate(),
-				bob_key.getPublic());
-
-		SecretKeySpec secret_bob = combine(bob_key.getPrivate(),
-				alice_key.getPublic());
+		SecretKeySpec secret_bob = combine(priKey,
+				pubKey1);
 
 		System.out.println(Arrays.toString(secret_alice.getEncoded()));
 		System.out.println(Arrays.toString(secret_bob.getEncoded()));
@@ -85,8 +63,7 @@ public class DH2 {
 
 		cipher.init(Cipher.DECRYPT_MODE, key);
 		byte[] decryptedTextBytes = cipher.doFinal(encryptedMessageInBytes);
-		System.out.println(new String(decryptedTextBytes));*/
-	}
+		System.out.println(new String(decryptedTextBytes));	}
 
 	private static SecretKeySpec combine(PrivateKey private1, PublicKey public1)
 			throws NoSuchAlgorithmException, InvalidKeyException,
