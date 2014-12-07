@@ -195,23 +195,46 @@ public class ChatServer extends Thread {
 
 				else if (message != null && message.contains("key")) {
 					receiveData = new byte[size];
-
+					// receive key and other username
 					packet = new DatagramPacket(receiveData, receiveData.length);
 					server.receive(packet);
 					ByteArrayInputStream bi = new ByteArrayInputStream(
 							receiveData);
 					ObjectInput oi = new ObjectInputStream(bi);
 
-					ArrayList ar = (ArrayList) oi.readObject();
-					String user = (String) ar.get(0);
-					BigInteger p = (BigInteger) ar.get(1);
-					BigInteger g = (BigInteger) ar.get(2);
-					PublicKey pk = (PublicKey) ar.get(3);
-					System.out.println(user);
+					ArrayList<String> ar = (ArrayList) oi.readObject();
+					String user = (String) ar.get(0); // other username
+					bi.close();
+					oi.close();
+					/*
+					 * BigInteger p = (BigInteger) ar.get(1); BigInteger g =
+					 * (BigInteger) ar.get(2); PublicKey pk = (PublicKey)
+					 * ar.get(3); System.out.println(user);
+					 * 
+					 * System.out.println(p); System.out.println(g);
+					 * System.out.println(pk);
+					 */
+					sendData = new byte[size];
+					sendData = new String("publickey").getBytes();
+					InetAddress IPAddress = InetAddress
+							.getByName(activeUserList.get(user));
 
-					System.out.println(p);
-					System.out.println(g);
-					System.out.println(pk);
+					packet = new DatagramPacket(sendData, sendData.length,
+							IPAddress, clientPort);
+					server.send(packet);
+
+					ar.set(0, (String) activeIPList.get(packet.getAddress()));
+					ByteArrayOutputStream b = new ByteArrayOutputStream();
+					ObjectOutput o = new ObjectOutputStream(b);
+					o.writeObject(ar);
+
+					sendData = b.toByteArray();
+					o.close();
+					b.close();
+
+					packet = new DatagramPacket(sendData, sendData.length,
+							IPAddress, clientPort);
+					server.send(packet);
 
 				} else {
 					sendData = new byte[size];
