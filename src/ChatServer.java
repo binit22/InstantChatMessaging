@@ -1,8 +1,17 @@
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutput;
+import java.io.ObjectOutputStream;
+import java.math.BigInteger;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
+import java.security.PublicKey;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -182,6 +191,28 @@ public class ChatServer extends Thread {
 					packet = new DatagramPacket(sendData, sendData.length,
 							IPAddress, packet.getPort());
 					server.send(packet);
+				}
+
+				else if (message != null && message.contains("key")) {
+					receiveData = new byte[size];
+
+					packet = new DatagramPacket(receiveData, receiveData.length);
+					server.receive(packet);
+					ByteArrayInputStream bi = new ByteArrayInputStream(
+							receiveData);
+					ObjectInput oi = new ObjectInputStream(bi);
+
+					ArrayList<Object> ar = (ArrayList<Object>) oi.readObject();
+					String user = (String) ar.get(0);
+					BigInteger p = (BigInteger) ar.get(1);
+					BigInteger g = (BigInteger) ar.get(2);
+					PublicKey pk = (PublicKey) ar.get(3);
+					System.out.println(user);
+
+					System.out.println(p);
+					System.out.println(g);
+					System.out.println(pk);
+
 				} else {
 					sendData = new byte[size];
 					String[] userMsg = message.split(SEMICOLON);
@@ -193,6 +224,7 @@ public class ChatServer extends Thread {
 					packet = new DatagramPacket(sendData, sendData.length,
 							IPAddress, clientPort);
 					server.send(packet);
+
 				}
 
 			}
