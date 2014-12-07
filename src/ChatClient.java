@@ -136,6 +136,12 @@ public class ChatClient extends Thread {
 			DatagramPacket packet = null;
 			String sendMsg = "";
 			
+			sendData = new byte[size];
+			sendData = "key".getBytes();
+			InetAddress IPAddress = InetAddress.getByName(serverIP);
+			packet = new DatagramPacket(sendData, sendData.length, IPAddress, serverPort);
+			server.send(packet);
+			
 			BigInteger p = new BigInteger(Integer.toString(pValue));
 			BigInteger g = new BigInteger(Integer.toString(gValue));
 			int bitLength = 512; // 512 bits
@@ -169,7 +175,7 @@ public class ChatClient extends Thread {
 			
 		    sendData = by;
 //			sendData = (this.toUser + SEMICOLON + sendMsg).getBytes();
-			InetAddress IPAddress = InetAddress.getByName(serverIP);
+//			InetAddress IPAddress = InetAddress.getByName(serverIP);
 			packet = new DatagramPacket(sendData, sendData.length, IPAddress, serverPort);
 			server.send(packet);
 		    
