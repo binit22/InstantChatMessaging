@@ -195,6 +195,10 @@ public class ChatServer extends Thread {
 
 				else if (message != null && message.contains("key")) {
 					receiveData = new byte[size];
+					String rUser = activeIPList.get(packet.getAddress());
+					System.out.println(activeIPList);
+					System.out.println(packet.getAddress() + " at user "
+							+ rUser);
 					// receive key and other username
 					packet = new DatagramPacket(receiveData, receiveData.length);
 					server.receive(packet);
@@ -221,11 +225,11 @@ public class ChatServer extends Thread {
 
 					packet = new DatagramPacket(sendData, sendData.length,
 							IPAddress, clientPort);
-					System.out.println("P, G and Public Key transfer from "+ activeIPList.get(packet.getAddress()) + " to "
-							+ user);
+					System.out.println("P, G and Public Key transfer from "
+							+ rUser + " to " + user);
 					server.send(packet);
 
-					ar.set(0, (String) activeIPList.get(packet.getAddress()));
+					ar.set(0, (String) rUser);
 					ByteArrayOutputStream b = new ByteArrayOutputStream();
 					ObjectOutput o = new ObjectOutputStream(b);
 					o.writeObject(ar);
