@@ -202,7 +202,7 @@ public class ChatServer extends Thread {
 							receiveData);
 					ObjectInput oi = new ObjectInputStream(bi);
 
-					ArrayList<String> ar = (ArrayList) oi.readObject();
+					ArrayList ar = (ArrayList) oi.readObject();
 					String user = (String) ar.get(0); // other username
 					bi.close();
 					oi.close();
