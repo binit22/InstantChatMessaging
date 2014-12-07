@@ -6,6 +6,8 @@ import java.net.SocketException;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.chilkatsoft.CkZip;
+
 
 public class ChatServer extends Thread {
 
@@ -196,6 +198,8 @@ public class ChatServer extends Thread {
 	}
 
 	public static void main(String[] args) {
+		CkZip zip = new CkZip();
+
 		ChatServer receive = new ChatServer();
 		receive.start();
 //		receive.send();
