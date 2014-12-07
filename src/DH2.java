@@ -54,7 +54,7 @@ public class DH2 {
 		byte shavalue[] = genSHA256(secret_alice.getEncoded());
 		SecretKeySpec key = new SecretKeySpec(shavalue, "AES");
 		// System.out.println(Arrays.toString(key.getEncoded()));
-		String input1 = "hello there";
+		String input1 = "h";
 		byte[] input = input1.getBytes();
 		Cipher cipher = Cipher.getInstance("AES");
 		System.out.println(new String(input));
@@ -80,7 +80,7 @@ public class DH2 {
 	public static byte[] genSHA256(byte[] original)
 			throws NoSuchAlgorithmException {
 
-		MessageDigest md = MessageDigest.getInstance("SHA-256");
+		MessageDigest md = MessageDigest.getInstance("MD5");
 		md.update(original);
 		byte[] digest = md.digest();
 
