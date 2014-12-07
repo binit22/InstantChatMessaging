@@ -26,7 +26,7 @@ public class ChatServer extends Thread {
 
 	public static int PORT = 5000;
 	public static int clientPort = 7000;
-	public static String authServerIP = "192.168.1.10";
+	public static String authServerIP = "129.21.145.101";
 	public static int authServerPort = 8000;
 	public static DatagramSocket server = null;
 
@@ -219,19 +219,17 @@ public class ChatServer extends Thread {
 					InetAddress IPAddress = InetAddress
 							.getByName(activeUserList.get(user));
 
-					System.out.println("P, G and Public Key transfer from "
-							+ activeIPList.get(packet.getAddress()) + " to "
-							+ user);
-
 					packet = new DatagramPacket(sendData, sendData.length,
 							IPAddress, clientPort);
+					System.out.println("P, G and Public Key transfer from "+ activeIPList.get(packet.getAddress()) + " to "
+							+ user);
 					server.send(packet);
 
 					ar.set(0, (String) activeIPList.get(packet.getAddress()));
 					ByteArrayOutputStream b = new ByteArrayOutputStream();
 					ObjectOutput o = new ObjectOutputStream(b);
 					o.writeObject(ar);
-//
+
 					sendData = b.toByteArray();
 					o.close();
 					b.close();
