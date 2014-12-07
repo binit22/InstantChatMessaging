@@ -9,27 +9,29 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 
-
-public class ChatClient extends Thread{
+public class ChatClient extends Thread {
 
 	public final static int size = 2048;
 	public final static String SEMICOLON = ";;";
 
 	public static int PORT = 7000;
-	public static String serverIP = "192.168.1.10";
+	public static String serverIP = "berry.cs.rit.edu";
 	public static int serverPort = 5000;
 
 	public static DatagramSocket server = null;
-//
+	//
 	public String type;
 	public String toUser;
 
-	public ChatClient(String type){
+	public ChatClient(String type, String server1) {
 		try {
 			this.type = type;
-			if(server == null)
+			this.serverIP = server1;
+			if (server == null)
 				server = new DatagramSocket(PORT);
-		} catch (SocketException e) {e.printStackTrace();}
+		} catch (SocketException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public String genSHA256(String original) throws NoSuchAlgorithmException {
@@ -44,138 +46,152 @@ public class ChatClient extends Thread{
 		return sb.toString();
 	}
 
-	public boolean verifyUser(String username, String password){
+	public boolean verifyUser(String username, String password) {
 
 		String reply = null;
 		byte[] data = null;
 		DatagramPacket packet = null;
 
-		try{
+		try {
 			InetAddress IPAddress = InetAddress.getByName(serverIP);
 
 			data = new byte[size];
-			data = ("authenticate"+SEMICOLON+username+SEMICOLON+password).getBytes();
-			packet = new DatagramPacket(data, data.length, IPAddress, serverPort); 
+			data = ("authenticate" + SEMICOLON + username + SEMICOLON + password)
+					.getBytes();
+			packet = new DatagramPacket(data, data.length, IPAddress,
+					serverPort);
 			server.send(packet);
 
 			data = new byte[size];
-			packet = new DatagramPacket(data, data.length); 
+			packet = new DatagramPacket(data, data.length);
 			server.receive(packet);
 
 			reply = new String(packet.getData()).trim();
-			//			System.out.println(reply);
-		} catch(IOException ex){
+			// System.out.println(reply);
+		} catch (IOException ex) {
 			ex.printStackTrace();
-		} catch(Exception ex){
+		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
 
-		if("true".equals(reply))
+		if ("true".equals(reply))
 			return true;
 		else
 			return false;
 	}
 
-	public boolean userExists(String username){
+	public boolean userExists(String username) {
 
 		String reply = null;
 		byte[] data = null;
 		DatagramPacket packet = null;
 
-		try{
+		try {
 			InetAddress IPAddress = InetAddress.getByName(serverIP);
 
 			data = new byte[size];
-			data = ("verify"+SEMICOLON+username).getBytes();
-			packet = new DatagramPacket(data, data.length, IPAddress, serverPort); 
+			data = ("verify" + SEMICOLON + username).getBytes();
+			packet = new DatagramPacket(data, data.length, IPAddress,
+					serverPort);
 			server.send(packet);
 
 			data = new byte[size];
-			packet = new DatagramPacket(data, data.length); 
+			packet = new DatagramPacket(data, data.length);
 			server.receive(packet);
 
 			reply = new String(packet.getData()).trim();
-			//			System.out.println(reply);
-		} catch(IOException ex){
+			// System.out.println(reply);
+		} catch (IOException ex) {
 			ex.printStackTrace();
-		} catch(Exception ex){
+		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
 
-		if("true".equals(reply))
+		if ("true".equals(reply))
 			return true;
 		else
 			return false;
 	}
 
-	public void send(){
+	public void send() {
 
-		try{
-			BufferedReader inFromUser = new BufferedReader(new InputStreamReader(System.in));
+		try {
+			BufferedReader inFromUser = new BufferedReader(
+					new InputStreamReader(System.in));
 
 			byte[] sendData = null;
 			DatagramPacket packet = null;
 			String sendMsg = "";
 
 			System.out.println("Start sending messages");
-			while(true){
+			while (true) {
 				sendMsg = inFromUser.readLine();
 
 				sendData = new byte[size];
-				sendData = (this.toUser+SEMICOLON+sendMsg).getBytes();
-				InetAddress IPAddress = InetAddress.getByName(serverIP); 
-				packet = new DatagramPacket(sendData, sendData.length, IPAddress, serverPort); 
+				sendData = (this.toUser + SEMICOLON + sendMsg).getBytes();
+				InetAddress IPAddress = InetAddress.getByName(serverIP);
+				packet = new DatagramPacket(sendData, sendData.length,
+						IPAddress, serverPort);
 				server.send(packet);
 			}
 
-		} catch(IOException ex){
+		} catch (IOException ex) {
 			ex.printStackTrace();
-		} catch(Exception ex){
+		} catch (Exception ex) {
 			ex.printStackTrace();
-		} finally{
-			if(server != null)
+		} finally {
+			if (server != null)
 				server.close();
 		}
 	}
 
-	public String receive(){
+	public String receive() {
 		String message = "";
-		try{
+		try {
 
 			byte[] receiveData = null;
 			DatagramPacket receivePacket = null;
 
-			while(true){
-				receiveData = new byte[size]; 
-				receivePacket = new DatagramPacket(receiveData, receiveData.length); 
-				server.receive(receivePacket); 
+			while (true) {
+				receiveData = new byte[size];
+				receivePacket = new DatagramPacket(receiveData,
+						receiveData.length);
+				server.receive(receivePacket);
 
-				// message command received from either client or server or bootstrap
-				message = new String(receivePacket.getData()).trim(); 
+				// message command received from either client or server or
+				// bootstrap
+				message = new String(receivePacket.getData()).trim();
 				System.out.println(message);
 			}
-		} catch(Exception ex){
+		} catch (Exception ex) {
 			ex.printStackTrace();
-		} finally{
+		} finally {
 		}
 		return message;
 	}
 
-	public void run(){
-		if("send".equals(this.type))
+	public void run() {
+		if ("send".equals(this.type))
 			this.send();
 		else
 			this.receive();
 	}
 
 	public static void main(String[] args) {
-		try{
-			ChatClient clientSend = new ChatClient("send");
-			ChatClient clientReceive = new ChatClient("receive");
-			
-			BufferedReader inFromUser = new BufferedReader(new InputStreamReader(System.in));
+		try {
 
-			while(true){ 
+			if (args.length == 1)
+				serverIP = args[0];
+			if (args.length > 1)
+				usage();
+
+			ChatClient clientSend = new ChatClient("send", serverIP);
+			ChatClient clientReceive = new ChatClient("receive", serverIP);
+
+			BufferedReader inFromUser = new BufferedReader(
+					new InputStreamReader(System.in));
+
+			while (true) {
 				System.out.print("username :");
 				String username = inFromUser.readLine();
 
@@ -183,48 +199,56 @@ public class ChatClient extends Thread{
 				String password = inFromUser.readLine();
 
 				String encryptedPwd = clientSend.genSHA256(password);
-				//				System.out.println("\nPwd: "+encryptedPwd);
-				if(clientSend.verifyUser(username, encryptedPwd)){
+				// System.out.println("\nPwd: "+encryptedPwd);
+				if (clientSend.verifyUser(username, encryptedPwd)) {
 					System.out.println("verified");
 
-					while(true){
+					while (true) {
 						System.out.print("start a new chat?(yes/no)");
 						String option = inFromUser.readLine();
-						if("yes".equals(option.trim())){
+						if ("yes".equals(option.trim())) {
 							System.out.print("enter username to chat with: ");
 							String toUsername = inFromUser.readLine();
-							if(clientSend.userExists(toUsername)){
-								//								System.out.println("start chatting");
+							if (clientSend.userExists(toUsername)) {
+								// System.out.println("start chatting");
 								clientSend.toUser = toUsername;
 								clientSend.start();
 								clientReceive.start();
 								break;
-							} else{
+							} else {
 								System.out.println("invalid user");
 								continue;
 							}
-						}
-						else{
+						} else {
 							clientReceive.start();
 							clientSend.start();
 							break;
 						}
 					}
 					break;
-				}else{
+				} else {
 					System.out.println("could not verify");
 					continue;
 				}
-			}			
-//			client.start();
-//			client.receive();
+			}
+			// client.start();
+			// client.receive();
 
-		} catch(IOException ex){
+		} catch (IOException ex) {
 			ex.printStackTrace();
 		} catch (Exception ex) {
 			ex.printStackTrace();
-		} finally{
+		} finally {
 
 		}
+	}
+
+	public static void usage() {
+
+		System.err.println("java ChatClient SERVERADDRESS");
+		System.err
+				.println("If no SERVERADDRESS specified, default will be taken.");
+		throw new IllegalArgumentException();
+
 	}
 }
