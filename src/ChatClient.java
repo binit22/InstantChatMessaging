@@ -1,19 +1,32 @@
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.ObjectOutput;
+import java.io.ObjectOutputStream;
+import java.math.BigInteger;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
+import java.security.KeyFactory;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.util.ArrayList;
+
+import javax.crypto.spec.DHParameterSpec;
+import javax.crypto.spec.DHPublicKeySpec;
 
 public class ChatClient extends Thread {
 
 	public final static int size = 2048;
 	public final static String SEMICOLON = ";;";
-
+	public final static int pValue = 47;
+	public final static int gValue = 71;
+	  
 	public static int PORT = 7000;
 	public static String serverIP = "berry.cs.rit.edu";
 	public static int serverPort = 5000;
@@ -122,16 +135,56 @@ public class ChatClient extends Thread {
 			byte[] sendData = null;
 			DatagramPacket packet = null;
 			String sendMsg = "";
+			
+			BigInteger p = new BigInteger(Integer.toString(pValue));
+			BigInteger g = new BigInteger(Integer.toString(gValue));
+			int bitLength = 512; // 512 bits
+		    SecureRandom rnd = new SecureRandom();
+		    p = BigInteger.probablePrime(bitLength, rnd);
+		    g = BigInteger.probablePrime(bitLength, rnd);
+			
+		    DHParameterSpec param = new DHParameterSpec(p, g);
+		    KeyPairGenerator kpg = KeyPairGenerator.getInstance("DiffieHellman");
+		    kpg.initialize(param);
+		    KeyPair kp = kpg.generateKeyPair();
 
+		    KeyFactory kfactory = KeyFactory.getInstance("DiffieHellman");
+
+		    DHPublicKeySpec kspec = (DHPublicKeySpec) kfactory.getKeySpec(kp.getPublic(), DHPublicKeySpec.class);
+			
+		    ArrayList key = new ArrayList();
+		    key.add(this.toUser);
+		    key.add(p);
+		    key.add(g);
+		    key.add(kp.getPublic());
+		    
+		    ByteArrayOutputStream b = new ByteArrayOutputStream();
+			ObjectOutput o = null;
+			o = new ObjectOutputStream(b);
+			o.writeObject(key);
+			byte[] by = b.toByteArray();
+
+			o.close();
+			b.close();
+			
+		    sendData = by;
+//			sendData = (this.toUser + SEMICOLON + sendMsg).getBytes();
+			InetAddress IPAddress = InetAddress.getByName(serverIP);
+			packet = new DatagramPacket(sendData, sendData.length, IPAddress, serverPort);
+			server.send(packet);
+		    
+			System.out.println(p);
+			System.out.println(g);
+			System.out.println(kp.getPublic());
+			
 			System.out.println("Start sending messages");
 			while (true) {
 				sendMsg = inFromUser.readLine();
 
 				sendData = new byte[size];
 				sendData = (this.toUser + SEMICOLON + sendMsg).getBytes();
-				InetAddress IPAddress = InetAddress.getByName(serverIP);
-				packet = new DatagramPacket(sendData, sendData.length,
-						IPAddress, serverPort);
+//				InetAddress IPAddress = InetAddress.getByName(serverIP);
+				packet = new DatagramPacket(sendData, sendData.length, IPAddress, serverPort);
 				server.send(packet);
 			}
 
