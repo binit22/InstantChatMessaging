@@ -106,9 +106,9 @@ public class ChatClient extends Thread {
 			sendData = by;
 			packet = new DatagramPacket(sendData, sendData.length, IPAddress, serverPort);
 			server.send(packet);
-			System.out.println(p);
-			System.out.println(g);
-			System.out.println(kp.getPublic());
+			System.out.println("@ "+p);
+			System.out.println("# "+g);
+			System.out.println("$ "+kp.getPublic());
 		} catch(Exception ex){
 			ex.printStackTrace();
 		}
@@ -186,13 +186,13 @@ public class ChatClient extends Thread {
 					PublicKey pk = (PublicKey) ar.get(3);
 					System.out.println(user);
 
-					System.out.println(p);
-					System.out.println(g);
-					System.out.println(pk);
+					System.out.println("@@@ "+p);
+					System.out.println("### "+g);
+					System.out.println("$$$ "+pk);
 					
 				}
 				else{
-				System.out.println(message);
+					System.out.println(message);
 				}
 			}
 		} catch (Exception ex) {
