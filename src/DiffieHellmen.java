@@ -65,7 +65,7 @@ public class DiffieHellmen {
 		//		System.out.println(l);
 
 		String nulll = "\0";
-		StringBuffer plaintext = new StringBuffer("my name is shah");//\0\0\0\0\0\0"; /*Note null padding*/
+		StringBuffer plaintext = new StringBuffer("my name is shaha");//\0\0\0\0\0\0"; /*Note null padding*/
 
 		int len = plaintext.length() % 16;
 		if(len != 0)

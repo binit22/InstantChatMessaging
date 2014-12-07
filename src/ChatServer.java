@@ -198,6 +198,7 @@ public class ChatServer extends Thread {
 		ChatServer receive = new ChatServer();
 		receive.start();
 //		receive.send();
+		//
 
 	}
 }

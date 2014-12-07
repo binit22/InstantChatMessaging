@@ -54,7 +54,7 @@ public class DH2 {
 		byte shavalue[] = genSHA256(secret_alice.getEncoded());
 		SecretKeySpec key = new SecretKeySpec(shavalue, "AES");
 		// System.out.println(Arrays.toString(key.getEncoded()));
-		String input1 = "h";
+		String input1 = "hello";
 		byte[] input = input1.getBytes();
 		Cipher cipher = Cipher.getInstance("AES");
 		System.out.println(new String(input));
