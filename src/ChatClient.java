@@ -157,9 +157,30 @@ public class ChatClient extends Thread {
 			System.out.println("Start sending messages");
 			while (true) {
 				sendMsg = inFromUser.readLine();
+				sendData = "message".getBytes();
+				// sendData = (this.toUser + SEMICOLON + sendMsg).getBytes();
+				IPAddress = InetAddress.getByName(serverIP);
+				packet = new DatagramPacket(sendData, sendData.length,
+						IPAddress, serverPort);
+				server.send(packet);
+				
+				ArrayList toSend = new ArrayList();
+				toSend.add(this.toUser);
+				byte[] eMsg = encrypt(sendMsg, secretKey.get(this.toUser));
+				toSend.add(eMsg);
+				System.out.println("byte encrypt : "+eMsg);
+				ByteArrayOutputStream b = new ByteArrayOutputStream();
+				ObjectOutput o = null;
+				o = new ObjectOutputStream(b);
+				o.writeObject(toSend);
+				byte[] by = b.toByteArray();
 
-				sendData = new byte[size];
-				sendData = (this.toUser + SEMICOLON + sendMsg).getBytes();
+				o.close();
+				b.close();
+
+				sendData = by;
+
+				// sendData = (this.toUser + SEMICOLON + sendMsg).getBytes();
 				IPAddress = InetAddress.getByName(serverIP);
 				packet = new DatagramPacket(sendData, sendData.length,
 						IPAddress, serverPort);
@@ -287,7 +308,11 @@ public class ChatClient extends Thread {
 					ObjectInput oi = new ObjectInputStream(bi);
 
 					ArrayList ar = (ArrayList) oi.readObject();
-					System.out.println(ar);
+					System.out.print(ar.get(0));
+					String d = decrypt((byte[]) ar.get(1),
+							secretKey.get(ar.get(0)));
+					System.out.print(" : " + d + "\n");
+					// System.out.println(ar);
 				}
 			}
 		} catch (Exception ex) {

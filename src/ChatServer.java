@@ -12,6 +12,7 @@ import java.net.InetAddress;
 import java.net.SocketException;
 import java.security.PublicKey;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -148,7 +149,7 @@ public class ChatServer extends Thread {
 				// message command received from either client or server or
 				// bootstrap
 				message = new String(packet.getData()).trim();
-			//	System.out.println(message);
+				// System.out.println(message);
 
 				byte[] sendData = null;
 				// DatagramPacket packet = null;
@@ -158,7 +159,8 @@ public class ChatServer extends Thread {
 				if (message != null && message.contains("authenticate")) {
 					// System.out.println("authenticating");
 					sendMsg = this.verifyUser(message);
-					System.out.println(message.split(SEMICOLON)[1]+" user is being autheticated.");
+					System.out.println(message.split(SEMICOLON)[1]
+							+ " user is being autheticated.");
 					// add username and its IP address in active user list
 					if ("true".equals(sendMsg)) {
 						synchronized (activeUserList) {
@@ -179,7 +181,8 @@ public class ChatServer extends Thread {
 
 				}// authenticate from authentication server for chat
 				else if (message != null && message.contains("verify")) {
-					System.out.println(message.split(SEMICOLON)[1]+" user is being verified.");
+					System.out.println(message.split(SEMICOLON)[1]
+							+ " user is being verified.");
 
 					if (activeUserList.containsKey(message.split(SEMICOLON)[1])) {
 						sendMsg = "true";
@@ -196,7 +199,8 @@ public class ChatServer extends Thread {
 
 				else if (message != null && message.contains("initialkey")) {
 					receiveData = new byte[size];
-					String rUser = activeIPList.get(packet.getAddress().getHostAddress());
+					String rUser = activeIPList.get(packet.getAddress()
+							.getHostAddress());
 					// receive key and other username
 					packet = new DatagramPacket(receiveData, receiveData.length);
 					server.receive(packet);
@@ -208,7 +212,7 @@ public class ChatServer extends Thread {
 					String user = (String) ar.get(0); // other username
 					bi.close();
 					oi.close();
-				
+
 					sendData = new byte[size];
 					sendData = new String("publickey1").getBytes();
 					InetAddress IPAddress = InetAddress
@@ -235,7 +239,8 @@ public class ChatServer extends Thread {
 
 				} else if (message != null && message.contains("nextkey")) {
 					receiveData = new byte[size];
-					String rUser = activeIPList.get(packet.getAddress().getHostAddress());
+					String rUser = activeIPList.get(packet.getAddress()
+							.getHostAddress());
 					// receive key and other username
 					packet = new DatagramPacket(receiveData, receiveData.length);
 					server.receive(packet);
@@ -245,9 +250,6 @@ public class ChatServer extends Thread {
 
 					ArrayList ar = (ArrayList) oi.readObject();
 
-					
-					
-					
 					String oUser = (String) ar.get(0);
 					ar.set(0, (String) rUser);
 
@@ -259,14 +261,14 @@ public class ChatServer extends Thread {
 
 					packet = new DatagramPacket(sendData, sendData.length,
 							IPAddress, clientPort);
-					System.out.println("Public Key transfer from "
-							+ rUser + " to " + oUser);
+					System.out.println("Public Key transfer from " + rUser
+							+ " to " + oUser);
 					server.send(packet);
-					
+
 					ByteArrayOutputStream b = new ByteArrayOutputStream();
 					ObjectOutput o = new ObjectOutputStream(b);
 					o.writeObject(ar);
-					
+
 					sendData = b.toByteArray();
 					o.close();
 					b.close();
@@ -274,6 +276,22 @@ public class ChatServer extends Thread {
 					packet = new DatagramPacket(sendData, sendData.length,
 							IPAddress, clientPort);
 					server.send(packet);
+
+				} else if (message != null && message.contains("message")) {
+					packet = new DatagramPacket(receiveData, receiveData.length);
+					server.receive(packet);
+
+					ByteArrayInputStream bi = new ByteArrayInputStream(
+							receiveData);
+					ObjectInput oi = new ObjectInputStream(bi);
+
+					ArrayList ar = (ArrayList) oi.readObject();
+					System.out.println("to user " + ar.get(0));
+					// System.out.println(ar.get(0));
+					System.out.println("byte encrypt : " + ar.get(1));
+					System.out.println("from user "
+							+ activeIPList.get(packet.getAddress()
+									.getHostAddress()));
 
 				} else {
 					sendData = new byte[size];
