@@ -27,7 +27,11 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.KeyAgreement;
+import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.DHParameterSpec;
 import javax.crypto.spec.DHPublicKeySpec;
 import javax.crypto.spec.SecretKeySpec;
@@ -247,7 +251,9 @@ public class ChatClient extends Thread {
 
 					SecretKeySpec secretKey = combine(myPrivateKey,
 							otherPublicKey);
-					System.out.println("&&&&& secret key "+Arrays.toString(secretKey.getEncoded()));
+					System.out.println("&&&&& secret key "
+							+ Arrays.toString(secretKey.getEncoded()));
+
 					ChatClient.secretKey.put(user, secretKey);
 				}
 				if (message.contains("publickey2")) {
@@ -268,7 +274,8 @@ public class ChatClient extends Thread {
 					// System.out.println("private key before combine "+Arrays.toString(privateKey.getEncoded()));
 					SecretKeySpec secretKey = combine(privateKey,
 							otherPublicKey);
-					System.out.println("&&& secret key "+Arrays.toString(secretKey.getEncoded()));
+					System.out.println("&&& secret key "
+							+ Arrays.toString(secretKey.getEncoded()));
 					ChatClient.secretKey.put(user, secretKey);
 				} else if (message.contains("message")) {
 					receiveData = new byte[size];
@@ -305,7 +312,7 @@ public class ChatClient extends Thread {
 		byte[] digest = md.digest();
 		SecretKeySpec key = new SecretKeySpec(digest, "AES");
 
-		return aes;
+		return key;
 
 	}
 
@@ -464,6 +471,26 @@ public class ChatClient extends Thread {
 		} finally {
 
 		}
+	}
+
+	public byte[] encrypt(String input, SecretKeySpec key)
+			throws NoSuchAlgorithmException, NoSuchPaddingException,
+			IllegalBlockSizeException, BadPaddingException, InvalidKeyException {
+		Cipher cipher = Cipher.getInstance("AES");
+
+		cipher.init(Cipher.ENCRYPT_MODE, key);
+		byte[] encryptedMessageInBytes = cipher.doFinal(input.getBytes());
+		return encryptedMessageInBytes;
+	}
+
+	public String decrypt(byte[] encryptedMessageInBytes, SecretKeySpec key)
+			throws NoSuchAlgorithmException, NoSuchPaddingException,
+			IllegalBlockSizeException, BadPaddingException, InvalidKeyException {
+		Cipher cipher = Cipher.getInstance("AES");
+
+		cipher.init(Cipher.DECRYPT_MODE, key);
+		byte[] decryptedTextBytes = cipher.doFinal(encryptedMessageInBytes);
+		return new String(decryptedTextBytes);
 	}
 
 	public static void usage() {
