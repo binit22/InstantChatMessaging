@@ -193,7 +193,7 @@ public class ChatServer extends Thread {
 					server.send(packet);
 				}
 
-				else if (message != null && message.contains("key")) {
+				else if (message != null && message.contains("initialkey")) {
 					receiveData = new byte[size];
 					String rUser = activeIPList.get(packet.getAddress());
 					System.out.println(activeIPList);
@@ -219,7 +219,7 @@ public class ChatServer extends Thread {
 					 * System.out.println(pk);
 					 */
 					sendData = new byte[size];
-					sendData = new String("publickey").getBytes();
+					sendData = new String("publickey1").getBytes();
 					InetAddress IPAddress = InetAddress
 							.getByName(activeUserList.get(user));
 
@@ -233,6 +233,45 @@ public class ChatServer extends Thread {
 					ByteArrayOutputStream b = new ByteArrayOutputStream();
 					ObjectOutput o = new ObjectOutputStream(b);
 					o.writeObject(ar);
+
+					sendData = b.toByteArray();
+					o.close();
+					b.close();
+
+					packet = new DatagramPacket(sendData, sendData.length,
+							IPAddress, clientPort);
+					server.send(packet);
+
+				} else if (message != null && message.contains("nextkey")) {
+					receiveData = new byte[size];
+					String rUser = activeIPList.get(packet.getAddress());
+					System.out.println(activeIPList);
+					System.out.println(packet.getAddress() + " at user "
+							+ rUser);
+					// receive key and other username
+					packet = new DatagramPacket(receiveData, receiveData.length);
+					server.receive(packet);
+					ByteArrayInputStream bi = new ByteArrayInputStream(
+							receiveData);
+					ObjectInput oi = new ObjectInputStream(bi);
+
+					ArrayList ar = (ArrayList) oi.readObject();
+
+					ByteArrayOutputStream b = new ByteArrayOutputStream();
+					ObjectOutput o = new ObjectOutputStream(b);
+					o.writeObject(ar);
+					String oUser = (String) ar.get(0);
+					InetAddress IPAddress = InetAddress
+							.getByName(activeUserList.get(oUser));
+
+					sendData = new byte[size];
+					sendData = new String("publickey2").getBytes();
+
+					packet = new DatagramPacket(sendData, sendData.length,
+							IPAddress, clientPort);
+					System.out.println("P, G and Public Key transfer from "
+							+ rUser + " to " + oUser);
+					server.send(packet);
 
 					sendData = b.toByteArray();
 					o.close();
