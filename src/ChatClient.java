@@ -213,7 +213,7 @@ public class ChatClient extends Thread {
 					PrivateKey myPrivateKey = kp.getPrivate();
 					
 //					System.out.println("$$$generated using p g "+kp.getPublic());
-//					System.out.println("%%%generated using p g "+myPrivateKey);
+					System.out.println("%%%generated using p g "+myPrivateKey);
 					
 					// send
 					byte[] sendData = new byte[size];
