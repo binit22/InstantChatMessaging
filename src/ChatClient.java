@@ -247,7 +247,7 @@ public class ChatClient extends Thread {
 
 					SecretKeySpec secretKey = combine(myPrivateKey,
 							otherPublicKey);
-					// System.out.println("&&&&& "+Arrays.toString(secretKey.getEncoded()));
+					System.out.println("&&&&& secret key "+Arrays.toString(secretKey.getEncoded()));
 					ChatClient.secretKey.put(user, secretKey);
 				}
 				if (message.contains("publickey2")) {
@@ -268,7 +268,7 @@ public class ChatClient extends Thread {
 					// System.out.println("private key before combine "+Arrays.toString(privateKey.getEncoded()));
 					SecretKeySpec secretKey = combine(privateKey,
 							otherPublicKey);
-					// System.out.println("&&& secret key "+Arrays.toString(secretKey.getEncoded()));
+					System.out.println("&&& secret key "+Arrays.toString(secretKey.getEncoded()));
 					ChatClient.secretKey.put(user, secretKey);
 				} else if (message.contains("message")) {
 					receiveData = new byte[size];
