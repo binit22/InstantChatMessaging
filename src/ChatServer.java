@@ -257,10 +257,12 @@ public class ChatServer extends Thread {
 
 					ArrayList ar = (ArrayList) oi.readObject();
 
-					ByteArrayOutputStream b = new ByteArrayOutputStream();
-					ObjectOutput o = new ObjectOutputStream(b);
-					o.writeObject(ar);
+					
+					
+					
 					String oUser = (String) ar.get(0);
+					PublicKey pk=(PublicKey) ar.get(1);
+					System.out.println(pk);
 					InetAddress IPAddress = InetAddress
 							.getByName(activeUserList.get(oUser));
 
@@ -272,7 +274,11 @@ public class ChatServer extends Thread {
 					System.out.println("P, G and Public Key transfer from "
 							+ rUser + " to " + oUser);
 					server.send(packet);
-
+					
+					ByteArrayOutputStream b = new ByteArrayOutputStream();
+					ObjectOutput o = new ObjectOutputStream(b);
+					o.writeObject(ar);
+					
 					sendData = b.toByteArray();
 					o.close();
 					b.close();
