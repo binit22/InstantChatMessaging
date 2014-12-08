@@ -1,6 +1,7 @@
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.Console;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectInput;
@@ -65,19 +66,20 @@ public class ChatClient extends Thread {
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	private void sendPublicKey(){
+	private void sendPublicKey() {
 
 		byte[] sendData = null;
 		DatagramPacket packet = null;
 		InetAddress IPAddress = null;
 		KeyPair keyPair = null;
 
-		try{
+		try {
 			IPAddress = InetAddress.getByName(serverIP);
 
 			sendData = new byte[size];
 			sendData = "initialkey".getBytes();
-			packet = new DatagramPacket(sendData, sendData.length, IPAddress, serverPort);
+			packet = new DatagramPacket(sendData, sendData.length, IPAddress,
+					serverPort);
 			server.send(packet);
 
 			BigInteger p = new BigInteger(Integer.toString(pValue));
@@ -88,13 +90,15 @@ public class ChatClient extends Thread {
 			g = BigInteger.probablePrime(bitLength, rnd);
 
 			DHParameterSpec param = new DHParameterSpec(p, g);
-			KeyPairGenerator kpg = KeyPairGenerator.getInstance("DiffieHellman");
+			KeyPairGenerator kpg = KeyPairGenerator
+					.getInstance("DiffieHellman");
 			kpg.initialize(param);
 			keyPair = kpg.generateKeyPair();
 
 			KeyFactory kfactory = KeyFactory.getInstance("DiffieHellman");
 
-			DHPublicKeySpec kspec = (DHPublicKeySpec) kfactory.getKeySpec(keyPair.getPublic(), DHPublicKeySpec.class);
+			DHPublicKeySpec kspec = (DHPublicKeySpec) kfactory.getKeySpec(
+					keyPair.getPublic(), DHPublicKeySpec.class);
 
 			ArrayList key = new ArrayList();
 			key.add(this.toUser);
@@ -112,15 +116,16 @@ public class ChatClient extends Thread {
 			b.close();
 
 			sendData = by;
-			packet = new DatagramPacket(sendData, sendData.length, IPAddress, serverPort);
+			packet = new DatagramPacket(sendData, sendData.length, IPAddress,
+					serverPort);
 			server.send(packet);
-//			System.out.println("@ "+p);
-//			System.out.println("# "+g);
-//			System.out.println("$ "+keyPair.getPublic());
+			// System.out.println("@ "+p);
+			// System.out.println("# "+g);
+			// System.out.println("$ "+keyPair.getPublic());
 
 			privateKey = keyPair.getPrivate();
-//			System.out.println("% "+privateKey);
-		} catch(Exception ex){
+			// System.out.println("% "+privateKey);
+		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
 	}
@@ -133,14 +138,14 @@ public class ChatClient extends Thread {
 		InetAddress IPAddress = null;
 
 		try {
-			BufferedReader inFromUser = new BufferedReader(new InputStreamReader(System.in));
+			BufferedReader inFromUser = new BufferedReader(
+					new InputStreamReader(System.in));
 
-			if(send){
-				if(!secretKey.containsKey(this.toUser)){
+			if (send) {
+				if (!secretKey.containsKey(this.toUser)) {
 					// send public key to other client and set own private key
 					sendPublicKey();
-				}
-				else{
+				} else {
 					secretKey.get(this.toUser);
 				}
 			}
@@ -152,10 +157,10 @@ public class ChatClient extends Thread {
 				sendData = new byte[size];
 				sendData = (this.toUser + SEMICOLON + sendMsg).getBytes();
 				IPAddress = InetAddress.getByName(serverIP);
-				packet = new DatagramPacket(sendData, sendData.length, IPAddress, serverPort);
+				packet = new DatagramPacket(sendData, sendData.length,
+						IPAddress, serverPort);
 				server.send(packet);
 			}
-
 
 		} catch (IOException ex) {
 			ex.printStackTrace();
@@ -175,7 +180,7 @@ public class ChatClient extends Thread {
 			byte[] receiveData = null;
 			DatagramPacket packet = null;
 			InetAddress IPAddress = InetAddress.getByName(serverIP);
-			
+
 			while (true) {
 				receiveData = new byte[size];
 				packet = new DatagramPacket(receiveData, receiveData.length);
@@ -185,12 +190,13 @@ public class ChatClient extends Thread {
 				// bootstrap
 				message = new String(packet.getData()).trim();
 
-				if(message.contains("publickey1")){
+				if (message.contains("publickey1")) {
 					receiveData = new byte[size];
 					packet = new DatagramPacket(receiveData, receiveData.length);
 					server.receive(packet);
 
-					ByteArrayInputStream bi = new ByteArrayInputStream(receiveData);
+					ByteArrayInputStream bi = new ByteArrayInputStream(
+							receiveData);
 					ObjectInput oi = new ObjectInputStream(bi);
 
 					ArrayList ar = (ArrayList) oi.readObject();
@@ -198,31 +204,33 @@ public class ChatClient extends Thread {
 					BigInteger p = (BigInteger) ar.get(1);
 					BigInteger g = (BigInteger) ar.get(2);
 					PublicKey otherPublicKey = (PublicKey) ar.get(3);
-					
-					System.out.println("client who sent this key: "+user);
-//					System.out.println("@@@ "+p);
-//					System.out.println("### "+g);
-//					System.out.println("$$$from client "+otherPublicKey);
+
+					System.out.println("client who sent this key: " + user);
+					// System.out.println("@@@ "+p);
+					// System.out.println("### "+g);
+					// System.out.println("$$$from client "+otherPublicKey);
 
 					DHParameterSpec param = new DHParameterSpec(p, g);
-					KeyPairGenerator kpg = KeyPairGenerator.getInstance("DiffieHellman");
+					KeyPairGenerator kpg = KeyPairGenerator
+							.getInstance("DiffieHellman");
 					kpg.initialize(param);
 					KeyPair kp = kpg.generateKeyPair();
 					PrivateKey myPrivateKey = kp.getPrivate();
-					
-//					System.out.println("$$$generated using p g "+kp.getPublic());
-//					System.out.println("%%%generated using p g "+myPrivateKey);
-					
+
+					// System.out.println("$$$generated using p g "+kp.getPublic());
+					// System.out.println("%%%generated using p g "+myPrivateKey);
+
 					// send
 					byte[] sendData = new byte[size];
 					sendData = "nextkey".getBytes();
-					packet = new DatagramPacket(sendData, sendData.length, IPAddress, serverPort);
+					packet = new DatagramPacket(sendData, sendData.length,
+							IPAddress, serverPort);
 					server.send(packet);
-					
+
 					ArrayList key2 = new ArrayList();
 					key2.add(user);
 					key2.add(kp.getPublic());
-					
+
 					ByteArrayOutputStream b = new ByteArrayOutputStream();
 					ObjectOutput o = null;
 					o = new ObjectOutputStream(b);
@@ -233,38 +241,42 @@ public class ChatClient extends Thread {
 					b.close();
 
 					sendData = by;
-					packet = new DatagramPacket(sendData, sendData.length, IPAddress, serverPort);
+					packet = new DatagramPacket(sendData, sendData.length,
+							IPAddress, serverPort);
 					server.send(packet);
-					
-					SecretKeySpec secretKey = combine(myPrivateKey, otherPublicKey);
-//					System.out.println("&&&&& "+Arrays.toString(secretKey.getEncoded()));
+
+					SecretKeySpec secretKey = combine(myPrivateKey,
+							otherPublicKey);
+					// System.out.println("&&&&& "+Arrays.toString(secretKey.getEncoded()));
 					ChatClient.secretKey.put(user, secretKey);
 				}
-				if(message.contains("publickey2")){
+				if (message.contains("publickey2")) {
 					receiveData = new byte[size];
 					packet = new DatagramPacket(receiveData, receiveData.length);
 					server.receive(packet);
-					
-					ByteArrayInputStream bi = new ByteArrayInputStream(receiveData);
+
+					ByteArrayInputStream bi = new ByteArrayInputStream(
+							receiveData);
 					ObjectInput oi = new ObjectInputStream(bi);
 
 					ArrayList ar = (ArrayList) oi.readObject();
-					System.out.println("!!!array list in publickey2: "+ar);
-					
+					System.out.println("!!!array list in publickey2: " + ar);
+
 					String user = (String) ar.get(0);
 					PublicKey otherPublicKey = (PublicKey) ar.get(1);
-					
-//					System.out.println("private key before combine "+Arrays.toString(privateKey.getEncoded()));
-					SecretKeySpec secretKey = combine(privateKey, otherPublicKey);
-//					System.out.println("&&& secret key "+Arrays.toString(secretKey.getEncoded()));
+
+					// System.out.println("private key before combine "+Arrays.toString(privateKey.getEncoded()));
+					SecretKeySpec secretKey = combine(privateKey,
+							otherPublicKey);
+					// System.out.println("&&& secret key "+Arrays.toString(secretKey.getEncoded()));
 					ChatClient.secretKey.put(user, secretKey);
-				}
-				else if(message.contains("message")){
+				} else if (message.contains("message")) {
 					receiveData = new byte[size];
 					packet = new DatagramPacket(receiveData, receiveData.length);
 					server.receive(packet);
 
-					ByteArrayInputStream bi = new ByteArrayInputStream(receiveData);
+					ByteArrayInputStream bi = new ByteArrayInputStream(
+							receiveData);
 					ObjectInput oi = new ObjectInputStream(bi);
 
 					ArrayList ar = (ArrayList) oi.readObject();
@@ -285,11 +297,18 @@ public class ChatClient extends Thread {
 		ka.init(private1);
 		ka.doPhase(public1, true);
 		byte[] alice_secret = ka.generateSecret();
+
 		SecretKeySpec aes = new SecretKeySpec(alice_secret, "AES");
+
+		MessageDigest md = MessageDigest.getInstance("MD5");
+		md.update(aes.getEncoded());
+		byte[] digest = md.digest();
+		SecretKeySpec key = new SecretKeySpec(digest, "AES");
+
 		return aes;
 
 	}
-	
+
 	public String genSHA256(String original) throws NoSuchAlgorithmException {
 
 		MessageDigest md = MessageDigest.getInstance("SHA-256");
@@ -394,8 +413,12 @@ public class ChatClient extends Thread {
 				System.out.print("username :");
 				String username = inFromUser.readLine();
 
-				System.out.print("\npassword :");
-				String password = inFromUser.readLine();
+				// System.out.print("\npassword :");
+				// String password = inFromUser.readLine();
+				Console console = System.console();
+
+				String password = new String(
+						console.readPassword("\npassword: "));
 
 				String encryptedPwd = clientSend.genSHA256(password);
 				// System.out.println("\nPwd: "+encryptedPwd);
@@ -421,7 +444,7 @@ public class ChatClient extends Thread {
 							}
 						} else {
 							clientReceive.start();
-							//							clientSend.start();
+							// clientSend.start();
 							break;
 						}
 					}
@@ -447,7 +470,7 @@ public class ChatClient extends Thread {
 
 		System.err.println("java ChatClient SERVERADDRESS");
 		System.err
-		.println("If no SERVERADDRESS specified, default will be taken.");
+				.println("If no SERVERADDRESS specified, default will be taken.");
 		throw new IllegalArgumentException();
 
 	}
