@@ -24,11 +24,9 @@ import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import javax.crypto.KeyAgreement;
-import javax.crypto.SecretKey;
 import javax.crypto.spec.DHParameterSpec;
 import javax.crypto.spec.DHPublicKeySpec;
 import javax.crypto.spec.SecretKeySpec;
@@ -53,7 +51,7 @@ public class ChatClient extends Thread {
 	private static PrivateKey privateKey;
 
 	// username, secret key
-	public static Map<String, String> secretKey = new HashMap<String, String>();
+	public static Map<String, SecretKeySpec> secretKey = new HashMap<String, SecretKeySpec>();
 
 	public ChatClient(String type, String serverIP) {
 		try {
@@ -116,12 +114,12 @@ public class ChatClient extends Thread {
 			sendData = by;
 			packet = new DatagramPacket(sendData, sendData.length, IPAddress, serverPort);
 			server.send(packet);
-			System.out.println("@ "+p);
-			System.out.println("# "+g);
-			System.out.println("$ "+keyPair.getPublic());
+//			System.out.println("@ "+p);
+//			System.out.println("# "+g);
+//			System.out.println("$ "+keyPair.getPublic());
 
 			privateKey = keyPair.getPrivate();
-			System.out.println("% "+privateKey);
+//			System.out.println("% "+privateKey);
 		} catch(Exception ex){
 			ex.printStackTrace();
 		}
@@ -201,10 +199,10 @@ public class ChatClient extends Thread {
 					BigInteger g = (BigInteger) ar.get(2);
 					PublicKey otherPublicKey = (PublicKey) ar.get(3);
 					
-					System.out.println(user);
-					System.out.println("@@@ "+p);
-					System.out.println("### "+g);
-					System.out.println("$$$from client "+otherPublicKey);
+					System.out.println("client who sent this key: "+user);
+//					System.out.println("@@@ "+p);
+//					System.out.println("### "+g);
+//					System.out.println("$$$from client "+otherPublicKey);
 
 					DHParameterSpec param = new DHParameterSpec(p, g);
 					KeyPairGenerator kpg = KeyPairGenerator.getInstance("DiffieHellman");
@@ -213,7 +211,7 @@ public class ChatClient extends Thread {
 					PrivateKey myPrivateKey = kp.getPrivate();
 					
 //					System.out.println("$$$generated using p g "+kp.getPublic());
-					System.out.println("%%%generated using p g "+myPrivateKey);
+//					System.out.println("%%%generated using p g "+myPrivateKey);
 					
 					// send
 					byte[] sendData = new byte[size];
@@ -239,7 +237,8 @@ public class ChatClient extends Thread {
 					server.send(packet);
 					
 					SecretKeySpec secretKey = combine(myPrivateKey, otherPublicKey);
-					System.out.println("&&&&& "+Arrays.toString(secretKey.getEncoded()));
+//					System.out.println("&&&&& "+Arrays.toString(secretKey.getEncoded()));
+					ChatClient.secretKey.put(user, secretKey);
 				}
 				if(message.contains("publickey2")){
 					receiveData = new byte[size];
@@ -255,9 +254,10 @@ public class ChatClient extends Thread {
 					String user = (String) ar.get(0);
 					PublicKey otherPublicKey = (PublicKey) ar.get(1);
 					
-					System.out.println("private key before combine "+Arrays.toString(privateKey.getEncoded()));
+//					System.out.println("private key before combine "+Arrays.toString(privateKey.getEncoded()));
 					SecretKeySpec secretKey = combine(privateKey, otherPublicKey);
-					System.out.println("&&& secret key "+Arrays.toString(secretKey.getEncoded()));
+//					System.out.println("&&& secret key "+Arrays.toString(secretKey.getEncoded()));
+					ChatClient.secretKey.put(user, secretKey);
 				}
 				else if(message.contains("message")){
 					receiveData = new byte[size];
