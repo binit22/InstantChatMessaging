@@ -44,8 +44,8 @@ public class BigIntegerDH {
 	}
 
 	public static void createSpecificKey(BigInteger p, BigInteger g) throws Exception {
+		
 		KeyPairGenerator kpg = KeyPairGenerator.getInstance("DiffieHellman");
-
 		DHParameterSpec param = new DHParameterSpec(p, g);
 		kpg.initialize(param);
 		KeyPair kp = kpg.generateKeyPair();
