@@ -286,12 +286,37 @@ public class ChatServer extends Thread {
 					ObjectInput oi = new ObjectInputStream(bi);
 
 					ArrayList ar = (ArrayList) oi.readObject();
+					String oUser = (String) ar.get(0);
+
+					InetAddress IPAddress = InetAddress
+							.getByName(activeUserList.get(oUser));
+
 					System.out.println("to user " + ar.get(0));
 					// System.out.println(ar.get(0));
 					System.out.println("byte encrypt : " + ar.get(1));
 					System.out.println("from user "
 							+ activeIPList.get(packet.getAddress()
 									.getHostAddress()));
+					String rUser = activeIPList.get(packet.getAddress()
+							.getHostAddress());
+					ar.set(0, rUser);
+					sendData = "message".getBytes();
+					packet = new DatagramPacket(sendData, sendData.length,
+							IPAddress, clientPort);
+
+					server.send(packet);
+
+					ByteArrayOutputStream b = new ByteArrayOutputStream();
+					ObjectOutput o = new ObjectOutputStream(b);
+					o.writeObject(ar);
+
+					sendData = b.toByteArray();
+					o.close();
+					b.close();
+
+					packet = new DatagramPacket(sendData, sendData.length,
+							IPAddress, clientPort);
+					server.send(packet);
 
 				} else {
 					sendData = new byte[size];
