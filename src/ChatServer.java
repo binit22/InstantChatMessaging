@@ -313,9 +313,11 @@ public class ChatServer extends Thread {
 					sendData = b.toByteArray();
 					o.close();
 					b.close();
-
+					System.out.println("Bytes to send to " + oUser
+							+ " having IP " + IPAddress);
 					packet = new DatagramPacket(sendData, sendData.length,
 							IPAddress, clientPort);
+
 					server.send(packet);
 
 				} else {

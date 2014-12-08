@@ -287,7 +287,7 @@ public class ChatClient extends Thread {
 					ObjectInput oi = new ObjectInputStream(bi);
 
 					ArrayList ar = (ArrayList) oi.readObject();
-					System.out.println("!!!array list in publickey2: " + ar);
+					//System.out.println("!!!array list in publickey2: " + ar);
 
 					String user = (String) ar.get(0);
 					PublicKey otherPublicKey = (PublicKey) ar.get(1);
