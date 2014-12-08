@@ -249,6 +249,8 @@ public class ChatServer extends Thread {
 					
 					
 					String oUser = (String) ar.get(0);
+					ar.set(0, (String) rUser);
+
 					InetAddress IPAddress = InetAddress
 							.getByName(activeUserList.get(oUser));
 
