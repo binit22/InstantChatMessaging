@@ -255,6 +255,7 @@ public class ChatClient extends Thread {
 					String user = (String) ar.get(0);
 					PublicKey otherPublicKey = (PublicKey) ar.get(1);
 					
+					System.out.println("private key before combine "+Arrays.toString(privateKey.getEncoded()));
 					SecretKeySpec secretKey = combine(privateKey, otherPublicKey);
 					System.out.println("&&& secret key "+Arrays.toString(secretKey.getEncoded()));
 				}
