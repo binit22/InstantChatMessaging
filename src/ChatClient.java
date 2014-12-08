@@ -212,8 +212,8 @@ public class ChatClient extends Thread {
 					KeyPair kp = kpg.generateKeyPair();
 					PrivateKey myPrivateKey = kp.getPrivate();
 					
-					System.out.println("$$$generated using p g "+kp.getPublic());
-					System.out.println("%%%generated using p g "+myPrivateKey);
+//					System.out.println("$$$generated using p g "+kp.getPublic());
+//					System.out.println("%%%generated using p g "+myPrivateKey);
 					
 					// send
 					byte[] sendData = new byte[size];
@@ -250,11 +250,13 @@ public class ChatClient extends Thread {
 					ObjectInput oi = new ObjectInputStream(bi);
 
 					ArrayList ar = (ArrayList) oi.readObject();
+					System.out.println("!!!array list in publickey2: "+ar);
+					
 					String user = (String) ar.get(0);
 					PublicKey otherPublicKey = (PublicKey) ar.get(1);
 					
 					SecretKeySpec secretKey = combine(privateKey, otherPublicKey);
-					System.out.println("&&& "+Arrays.toString(secretKey.getEncoded()));
+					System.out.println("&&& secret key "+Arrays.toString(secretKey.getEncoded()));
 				}
 				else if(message.contains("message")){
 					receiveData = new byte[size];
