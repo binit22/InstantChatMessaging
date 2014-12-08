@@ -148,7 +148,7 @@ public class ChatServer extends Thread {
 				// message command received from either client or server or
 				// bootstrap
 				message = new String(packet.getData()).trim();
-				System.out.println(message);
+			//	System.out.println(message);
 
 				byte[] sendData = null;
 				// DatagramPacket packet = null;
@@ -158,7 +158,7 @@ public class ChatServer extends Thread {
 				if (message != null && message.contains("authenticate")) {
 					// System.out.println("authenticating");
 					sendMsg = this.verifyUser(message);
-
+					System.out.println(message.split(SEMICOLON)[1]+" user is being autheticated.");
 					// add username and its IP address in active user list
 					if ("true".equals(sendMsg)) {
 						synchronized (activeUserList) {
@@ -179,6 +179,7 @@ public class ChatServer extends Thread {
 
 				}// authenticate from authentication server for chat
 				else if (message != null && message.contains("verify")) {
+					System.out.println(message.split(SEMICOLON)[1]+" user is being verified.");
 
 					if (activeUserList.containsKey(message.split(SEMICOLON)[1])) {
 						sendMsg = "true";
@@ -196,9 +197,6 @@ public class ChatServer extends Thread {
 				else if (message != null && message.contains("initialkey")) {
 					receiveData = new byte[size];
 					String rUser = activeIPList.get(packet.getAddress().getHostAddress());
-					System.out.println(activeIPList);
-					System.out.println(packet.getAddress() + " at user "
-							+ rUser);
 					// receive key and other username
 					packet = new DatagramPacket(receiveData, receiveData.length);
 					server.receive(packet);
@@ -210,14 +208,7 @@ public class ChatServer extends Thread {
 					String user = (String) ar.get(0); // other username
 					bi.close();
 					oi.close();
-					/*
-					 * BigInteger p = (BigInteger) ar.get(1); BigInteger g =
-					 * (BigInteger) ar.get(2); PublicKey pk = (PublicKey)
-					 * ar.get(3); System.out.println(user);
-					 * 
-					 * System.out.println(p); System.out.println(g);
-					 * System.out.println(pk);
-					 */
+				
 					sendData = new byte[size];
 					sendData = new String("publickey1").getBytes();
 					InetAddress IPAddress = InetAddress
@@ -245,9 +236,6 @@ public class ChatServer extends Thread {
 				} else if (message != null && message.contains("nextkey")) {
 					receiveData = new byte[size];
 					String rUser = activeIPList.get(packet.getAddress().getHostAddress());
-					System.out.println(activeIPList);
-					System.out.println(packet.getAddress() + " at user "
-							+ rUser);
 					// receive key and other username
 					packet = new DatagramPacket(receiveData, receiveData.length);
 					server.receive(packet);
@@ -261,8 +249,6 @@ public class ChatServer extends Thread {
 					
 					
 					String oUser = (String) ar.get(0);
-					PublicKey pk=(PublicKey) ar.get(1);
-					System.out.println(pk);
 					InetAddress IPAddress = InetAddress
 							.getByName(activeUserList.get(oUser));
 
@@ -271,7 +257,7 @@ public class ChatServer extends Thread {
 
 					packet = new DatagramPacket(sendData, sendData.length,
 							IPAddress, clientPort);
-					System.out.println("P, G and Public Key transfer from "
+					System.out.println("Public Key transfer from "
 							+ rUser + " to " + oUser);
 					server.send(packet);
 					
