@@ -50,7 +50,7 @@ public class ChatClient extends Thread {
 	public String toUser;
 	public boolean send;
 
-	private PrivateKey privateKey;
+	private static PrivateKey privateKey;
 
 	// username, secret key
 	public static Map<String, String> secretKey = new HashMap<String, String>();
