@@ -195,7 +195,7 @@ public class ChatServer extends Thread {
 
 				else if (message != null && message.contains("initialkey")) {
 					receiveData = new byte[size];
-					String rUser = activeIPList.get(packet.getAddress());
+					String rUser = activeIPList.get(packet.getAddress().getHostAddress());
 					System.out.println(activeIPList);
 					System.out.println(packet.getAddress() + " at user "
 							+ rUser);
@@ -244,7 +244,7 @@ public class ChatServer extends Thread {
 
 				} else if (message != null && message.contains("nextkey")) {
 					receiveData = new byte[size];
-					String rUser = activeIPList.get(packet.getAddress());
+					String rUser = activeIPList.get(packet.getAddress().getHostAddress());
 					System.out.println(activeIPList);
 					System.out.println(packet.getAddress() + " at user "
 							+ rUser);
