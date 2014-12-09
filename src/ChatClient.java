@@ -185,9 +185,9 @@ public class ChatClient extends Thread {
 				server.send(packet);
 
 				ArrayList toSend = new ArrayList();
-			
+
 				toSend.add(this.toUser);
-				
+
 				readKeys();
 				byte[] eMsg = encrypt(sendMsg, secretKey.get(this.toUser));
 				toSend.add(eMsg);
@@ -294,11 +294,11 @@ public class ChatClient extends Thread {
 							otherPublicKey);
 					System.out.println("&&&&& secret key "
 							+ Arrays.toString(secretKey.getEncoded()));
-					
+
 					readKeys();
 					ChatClient.secretKey.put(user, secretKey);
 					writeKeys();
-					
+
 				} else if (message.contains("publickey2")) {
 					receiveData = new byte[size];
 					packet = new DatagramPacket(receiveData, receiveData.length);
@@ -319,11 +319,11 @@ public class ChatClient extends Thread {
 							otherPublicKey);
 					System.out.println("&&& secret key "
 							+ Arrays.toString(secretKey.getEncoded()));
-					
+
 					readKeys();
 					ChatClient.secretKey.put(user, secretKey);
 					writeKeys();
-					
+
 				} else if (message.contains("message")) {
 					System.out.println("in message");
 
@@ -337,9 +337,10 @@ public class ChatClient extends Thread {
 
 					ArrayList ar = (ArrayList) oi.readObject();
 					System.out.print(ar.get(0));
-					
+
 					readKeys();
-					String d = decrypt((byte[]) ar.get(1), secretKey.get(ar.get(0)));
+					String d = decrypt((byte[]) ar.get(1),
+							secretKey.get(ar.get(0)));
 					System.out.print(" : " + d + "\n");
 					// System.out.println(ar);
 
@@ -506,13 +507,20 @@ public class ChatClient extends Thread {
 			while (true) {
 				System.out.print("username :");
 				String username = inFromUser.readLine();
-
+				String password;
+				Console console = null;
 				// System.out.print("\npassword :");
 				// String password = inFromUser.readLine();
-				Console console = System.console();
+				if (System.console() == null) {
+					System.out.println("\npassword: ");
+					password = inFromUser.readLine();
+				}
 
-				String password = new String(
-						console.readPassword("\npassword: "));
+				else{
+					console=System.console();
+				
+					password = new String(console.readPassword("\npassword: "));
+					}
 
 				String encryptedPwd = clientSend.genSHA256(password);
 				// System.out.println("\nPwd: "+encryptedPwd);
