@@ -186,7 +186,7 @@ public class ChatClient extends Thread {
 				ArrayList toSend = new ArrayList();
 			
 				toSend.add(this.toUser);
-				writeKeys();
+				
 				readKeys();
 				byte[] eMsg = encrypt(sendMsg, secretKey.get(this.toUser));
 				toSend.add(eMsg);
@@ -293,9 +293,11 @@ public class ChatClient extends Thread {
 							otherPublicKey);
 					System.out.println("&&&&& secret key "
 							+ Arrays.toString(secretKey.getEncoded()));
+					
 					readKeys();
 					ChatClient.secretKey.put(user, secretKey);
 					writeKeys();
+					
 				} else if (message.contains("publickey2")) {
 					receiveData = new byte[size];
 					packet = new DatagramPacket(receiveData, receiveData.length);
@@ -316,9 +318,11 @@ public class ChatClient extends Thread {
 							otherPublicKey);
 					System.out.println("&&& secret key "
 							+ Arrays.toString(secretKey.getEncoded()));
+					
 					readKeys();
 					ChatClient.secretKey.put(user, secretKey);
 					writeKeys();
+					
 				} else if (message.contains("message")) {
 					System.out.println("in message");
 
@@ -332,9 +336,9 @@ public class ChatClient extends Thread {
 
 					ArrayList ar = (ArrayList) oi.readObject();
 					System.out.print(ar.get(0));
+					
 					readKeys();
-					String d = decrypt((byte[]) ar.get(1),
-							secretKey.get(ar.get(0)));
+					String d = decrypt((byte[]) ar.get(1), secretKey.get(ar.get(0)));
 					System.out.print(" : " + d + "\n");
 					// System.out.println(ar);
 
@@ -562,7 +566,7 @@ public class ChatClient extends Thread {
 		ObjectOutputStream oos = new ObjectOutputStream(fout);
 		oos.writeObject(secretKey);
 		oos.close();
-
+		fout.close();
 	}
 
 	/*
@@ -574,6 +578,7 @@ public class ChatClient extends Thread {
 		InputStream buffer = new BufferedInputStream(file);
 		ObjectInputStream input1 = new ObjectInputStream(buffer);
 		secretKey = (HashMap) input1.readObject();
-
+		input1.close();
+		file.close();
 	}
 }
