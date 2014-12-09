@@ -62,9 +62,10 @@ public class ChatClient extends Thread {
 	// username, secret key
 	public static Map<String, SecretKeySpec> secretKey = new HashMap<String, SecretKeySpec>();
 
-	public ChatClient(String type, String serverIP) {
+	public ChatClient(String type, String serverIP) throws IOException {
 		try {
 			this.type = type;
+			writeKeys();
 			ChatClient.serverIP = serverIP;
 			if (server == null)
 				server = new DatagramSocket(PORT);
