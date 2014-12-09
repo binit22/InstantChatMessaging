@@ -51,7 +51,7 @@ public class ChatClient extends Thread {
 
 	public String type;
 	public String toUser;
-	public boolean send;
+	public boolean startSend;
 
 	private static PrivateKey privateKey;
 
@@ -120,8 +120,7 @@ public class ChatClient extends Thread {
 			b.close();
 
 			sendData = by;
-			packet = new DatagramPacket(sendData, sendData.length, IPAddress,
-					serverPort);
+			packet = new DatagramPacket(sendData, sendData.length, IPAddress, serverPort);
 			server.send(packet);
 			// System.out.println("@ "+p);
 			// System.out.println("# "+g);
@@ -145,45 +144,55 @@ public class ChatClient extends Thread {
 			BufferedReader inFromUser = new BufferedReader(
 					new InputStreamReader(System.in));
 
-			if (send) {
+			if (startSend) {
 				if (!secretKey.containsKey(this.toUser)) {
 					// send public key to other client and set own private key
 					sendPublicKey();
-				} else {
-					secretKey.get(this.toUser);
+					startSend = false;
 				}
 			}
 
 			System.out.println("Start sending messages");
 			while (true) {
+
+				while(true){
+					System.out.print("reply to? ");
+					String toUsername = inFromUser.readLine();
+
+					if (this.userExists(toUsername)) {
+						this.toUser = toUsername;
+						break;
+					} else {
+						System.out.println("invalid user");
+						continue;
+					}
+				}
+
+				System.out.println("message? ");
 				sendMsg = inFromUser.readLine();
+
+
 				sendData = "message".getBytes();
-				// sendData = (this.toUser + SEMICOLON + sendMsg).getBytes();
 				IPAddress = InetAddress.getByName(serverIP);
-				packet = new DatagramPacket(sendData, sendData.length,
-						IPAddress, serverPort);
+				packet = new DatagramPacket(sendData, sendData.length, IPAddress, serverPort);
 				server.send(packet);
-				
+
 				ArrayList toSend = new ArrayList();
 				toSend.add(this.toUser);
 				byte[] eMsg = encrypt(sendMsg, secretKey.get(this.toUser));
 				toSend.add(eMsg);
-				System.out.println("byte encrypt : "+eMsg);
+				//				System.out.println("byte encrypt : "+eMsg);
 				ByteArrayOutputStream b = new ByteArrayOutputStream();
 				ObjectOutput o = null;
 				o = new ObjectOutputStream(b);
 				o.writeObject(toSend);
 				byte[] by = b.toByteArray();
-
 				o.close();
 				b.close();
 
 				sendData = by;
-
-				// sendData = (this.toUser + SEMICOLON + sendMsg).getBytes();
 				IPAddress = InetAddress.getByName(serverIP);
-				packet = new DatagramPacket(sendData, sendData.length,
-						IPAddress, serverPort);
+				packet = new DatagramPacket(sendData, sendData.length, IPAddress, serverPort);
 				server.send(packet);
 			}
 
@@ -266,24 +275,20 @@ public class ChatClient extends Thread {
 					b.close();
 
 					sendData = by;
-					packet = new DatagramPacket(sendData, sendData.length,
-							IPAddress, serverPort);
+					packet = new DatagramPacket(sendData, sendData.length, IPAddress, serverPort);
 					server.send(packet);
 
-					SecretKeySpec secretKey = combine(myPrivateKey,
-							otherPublicKey);
-					System.out.println("&&&&& secret key "
-							+ Arrays.toString(secretKey.getEncoded()));
+					SecretKeySpec secretKey = combine(myPrivateKey, otherPublicKey);
+					System.out.println("&&&&& secret key " + Arrays.toString(secretKey.getEncoded()));
 
 					ChatClient.secretKey.put(user, secretKey);
 				}
-				if (message.contains("publickey2")) {
+				else if (message.contains("publickey2")) {
 					receiveData = new byte[size];
 					packet = new DatagramPacket(receiveData, receiveData.length);
 					server.receive(packet);
 
-					ByteArrayInputStream bi = new ByteArrayInputStream(
-							receiveData);
+					ByteArrayInputStream bi = new ByteArrayInputStream( receiveData);
 					ObjectInput oi = new ObjectInputStream(bi);
 
 					ArrayList ar = (ArrayList) oi.readObject();
@@ -293,28 +298,31 @@ public class ChatClient extends Thread {
 					PublicKey otherPublicKey = (PublicKey) ar.get(1);
 
 					// System.out.println("private key before combine "+Arrays.toString(privateKey.getEncoded()));
-					SecretKeySpec secretKey = combine(privateKey,
-							otherPublicKey);
-					System.out.println("&&& secret key "
-							+ Arrays.toString(secretKey.getEncoded()));
+					SecretKeySpec secretKey = combine(privateKey,otherPublicKey);
+					System.out.println("&&& secret key " + Arrays.toString(secretKey.getEncoded()));
 					ChatClient.secretKey.put(user, secretKey);
-				} else if (message.contains("message")) {
+				} 
+				else if (message.contains("message")) {
 					System.out.println("in message");
-					
+
 					receiveData = new byte[size];
 					packet = new DatagramPacket(receiveData, receiveData.length);
 					server.receive(packet);
 
-					ByteArrayInputStream bi = new ByteArrayInputStream(
-							receiveData);
+					ByteArrayInputStream bi = new ByteArrayInputStream(receiveData);
 					ObjectInput oi = new ObjectInputStream(bi);
 
 					ArrayList ar = (ArrayList) oi.readObject();
 					System.out.print(ar.get(0));
-					String d = decrypt((byte[]) ar.get(1),
-							secretKey.get(ar.get(0)));
+					String d = decrypt((byte[]) ar.get(1), secretKey.get(ar.get(0)));
 					System.out.print(" : " + d + "\n");
 					// System.out.println(ar);
+
+					if(!this.startSend){
+						ChatClient clientSend = new ChatClient("send", serverIP);
+						clientSend.startSend = true;
+						clientSend.start();
+					}
 				}
 			}
 		} catch (Exception ex) {
@@ -429,6 +437,32 @@ public class ChatClient extends Thread {
 			this.receive();
 	}
 
+	public byte[] encrypt(String input, SecretKeySpec key)
+			throws NoSuchAlgorithmException, NoSuchPaddingException,
+			IllegalBlockSizeException, BadPaddingException, InvalidKeyException {
+		Cipher cipher = Cipher.getInstance("AES");
+
+		cipher.init(Cipher.ENCRYPT_MODE, key);
+		byte[] encryptedMessageInBytes = cipher.doFinal(input.getBytes());
+		return encryptedMessageInBytes;
+	}
+
+	public String decrypt(byte[] encryptedMessageInBytes, SecretKeySpec key)
+			throws NoSuchAlgorithmException, NoSuchPaddingException,
+			IllegalBlockSizeException, BadPaddingException, InvalidKeyException {
+		Cipher cipher = Cipher.getInstance("AES");
+
+		cipher.init(Cipher.DECRYPT_MODE, key);
+		byte[] decryptedTextBytes = cipher.doFinal(encryptedMessageInBytes);
+		return new String(decryptedTextBytes);
+	}
+
+	public static void usage() {
+		System.err.println("java ChatClient SERVERADDRESS");
+		System.err.println("If no SERVERADDRESS specified, default will be taken.");
+		throw new IllegalArgumentException();
+	}
+
 	public static void main(String[] args) {
 		try {
 
@@ -451,8 +485,7 @@ public class ChatClient extends Thread {
 				// String password = inFromUser.readLine();
 				Console console = System.console();
 
-				String password = new String(
-						console.readPassword("\npassword: "));
+				String password = new String(console.readPassword("\npassword: "));
 
 				String encryptedPwd = clientSend.genSHA256(password);
 				// System.out.println("\nPwd: "+encryptedPwd);
@@ -462,12 +495,14 @@ public class ChatClient extends Thread {
 					while (true) {
 						System.out.print("start a new chat?(yes/no)");
 						String option = inFromUser.readLine();
+						
 						if ("yes".equals(option.trim())) {
 							System.out.print("enter username to chat with: ");
 							String toUsername = inFromUser.readLine();
 
 							if (clientSend.userExists(toUsername)) {
-								clientSend.send = true;
+								clientSend.startSend = true;
+								clientReceive.startSend = true;
 								clientSend.toUser = toUsername;
 								clientSend.start();
 								clientReceive.start();
@@ -478,7 +513,6 @@ public class ChatClient extends Thread {
 							}
 						} else {
 							clientReceive.start();
-							// clientSend.start();
 							break;
 						}
 					}
@@ -498,34 +532,5 @@ public class ChatClient extends Thread {
 		} finally {
 
 		}
-	}
-
-	public byte[] encrypt(String input, SecretKeySpec key)
-			throws NoSuchAlgorithmException, NoSuchPaddingException,
-			IllegalBlockSizeException, BadPaddingException, InvalidKeyException {
-		Cipher cipher = Cipher.getInstance("AES");
-
-		cipher.init(Cipher.ENCRYPT_MODE, key);
-		byte[] encryptedMessageInBytes = cipher.doFinal(input.getBytes());
-		return encryptedMessageInBytes;
-	}
-
-	public String decrypt(byte[] encryptedMessageInBytes, SecretKeySpec key)
-			throws NoSuchAlgorithmException, NoSuchPaddingException,
-			IllegalBlockSizeException, BadPaddingException, InvalidKeyException {
-		Cipher cipher = Cipher.getInstance("AES");
-
-		cipher.init(Cipher.DECRYPT_MODE, key);
-		byte[] decryptedTextBytes = cipher.doFinal(encryptedMessageInBytes);
-		return new String(decryptedTextBytes);
-	}
-
-	public static void usage() {
-
-		System.err.println("java ChatClient SERVERADDRESS");
-		System.err
-				.println("If no SERVERADDRESS specified, default will be taken.");
-		throw new IllegalArgumentException();
-
 	}
 }
