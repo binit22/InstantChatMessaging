@@ -27,7 +27,7 @@ public class ChatServer extends Thread {
 
 	public static int PORT = 5000;
 	public static int clientPort = 7000;
-	public static String authServerIP = "129.21.145.101";
+	public static String authServerIP = "192.168.198.1";
 	public static int authServerPort = 8000;
 	public static DatagramSocket server = null;
 

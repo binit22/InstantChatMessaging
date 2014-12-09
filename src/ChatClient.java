@@ -48,7 +48,7 @@ public class ChatClient extends Thread {
 	public final static int gValue = 71;
 
 	public static int PORT = 7000;
-	public static String serverIP = "berry.cs.rit.edu";
+	public static String serverIP = "129.21.37.16";
 	public static int serverPort = 5000;
 
 	public static DatagramSocket server = null;
