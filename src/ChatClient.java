@@ -299,6 +299,8 @@ public class ChatClient extends Thread {
 							+ Arrays.toString(secretKey.getEncoded()));
 					ChatClient.secretKey.put(user, secretKey);
 				} else if (message.contains("message")) {
+					System.out.println("in message");
+					
 					receiveData = new byte[size];
 					packet = new DatagramPacket(receiveData, receiveData.length);
 					server.receive(packet);
