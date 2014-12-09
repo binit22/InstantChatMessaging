@@ -563,7 +563,7 @@ public class ChatClient extends Thread {
 
 	public static void writeKeys() throws IOException {
 
-		FileOutputStream fout = new FileOutputStream("secrekey.ser");
+		FileOutputStream fout = new FileOutputStream("secretkey.ser");
 		ObjectOutputStream oos = new ObjectOutputStream(fout);
 		oos.writeObject(secretKey);
 		oos.close();
@@ -575,7 +575,7 @@ public class ChatClient extends Thread {
 	 */
 	public static void readKeys() throws ClassNotFoundException, IOException {
 
-		InputStream file = new FileInputStream("secreykey.ser");
+		InputStream file = new FileInputStream("secretkey.ser");
 		InputStream buffer = new BufferedInputStream(file);
 		ObjectInputStream input1 = new ObjectInputStream(buffer);
 		secretKey = (HashMap) input1.readObject();
