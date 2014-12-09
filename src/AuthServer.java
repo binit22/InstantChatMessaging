@@ -17,7 +17,7 @@ public class AuthServer extends Thread {
 	String sqlPassword;
 	DatagramSocket ds;
 	int size = 2048;
-	int serverPort = 7000;
+	int serverPort = 8000;
 
 	/**
 	 * 
