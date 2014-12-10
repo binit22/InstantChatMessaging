@@ -11,7 +11,7 @@ import java.sql.Statement;
 import java.util.Scanner;
 
 public class AuthServer extends Thread {
-	String serverAdd;
+	String serverAdd="129.21.30.38";
 	String sqlHost;
 	String sqlUsername;
 	String sqlPassword;
