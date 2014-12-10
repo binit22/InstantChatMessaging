@@ -3,6 +3,7 @@ import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.Console;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -44,7 +45,7 @@ public class ChatClient extends Thread {
 	public final static String SEMICOLON = ";;";
 	public final static int pValue = 47;
 	public final static int gValue = 71;
-
+	public static String myUserName = null;
 	public static int PORT = 7000;
 	public static String serverIP = "129.21.37.16";
 	public static int serverPort = 5000;
@@ -65,8 +66,8 @@ public class ChatClient extends Thread {
 	public ChatClient(String type, String serverIP) throws IOException {
 		try {
 			this.type = type;
-			
-			//writeKeys();
+
+			// writeKeys();
 			ChatClient.serverIP = serverIP;
 			if (server == null)
 				server = new DatagramSocket(PORT);
@@ -329,7 +330,7 @@ public class ChatClient extends Thread {
 					readKeys();
 					String msg = decrypt((byte[]) ar.get(1),
 							secretKey.get(ar.get(0)));
-					System.out.println("\n"+ar.get(0) + ": " + msg);
+					System.out.println("\n" + ar.get(0) + ": " + msg);
 				} else if (message.contains("verified")) {
 					synchronized (verify) {
 						receiveData = new byte[size];
@@ -509,7 +510,7 @@ public class ChatClient extends Thread {
 
 				if (clientSend.verifyUser(username, encryptedPwd)) {
 					System.out.println("verified");
-
+					myUserName = username;
 					clientSend.start();
 					clientReceive.start();
 					break;
@@ -528,13 +529,15 @@ public class ChatClient extends Thread {
 	}
 
 	public static void writeKeys() throws IOException {
-
-		FileOutputStream fout = new FileOutputStream("secretkey.ser");
-		ObjectOutputStream oos = new ObjectOutputStream(fout);
-		System.out.println("in write:: "+secretKey);
-		oos.writeObject(secretKey);
-		oos.close();
-		fout.close();
+		if (myUserName != null) {
+			FileOutputStream fout = new FileOutputStream(myUserName
+					+ "secretkey.ser");
+			ObjectOutputStream oos = new ObjectOutputStream(fout);
+			System.out.println("in write:: " + secretKey);
+			oos.writeObject(secretKey);
+			oos.close();
+			fout.close();
+		}
 	}
 
 	/*
@@ -542,13 +545,18 @@ public class ChatClient extends Thread {
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public static void readKeys() throws ClassNotFoundException, IOException {
-
-		InputStream file = new FileInputStream("secretkey.ser");
-		InputStream buffer = new BufferedInputStream(file);
-		ObjectInputStream input1 = new ObjectInputStream(buffer);
-		secretKey = (HashMap) input1.readObject();
-		System.out.println("in read:: "+secretKey);
-		input1.close();
-		file.close();
+		if (myUserName != null) {
+			File f = new File(myUserName + "secretkey.ser");
+			if (f.exists() && !f.isDirectory()) {
+				InputStream file = new FileInputStream(myUserName
+						+ "secretkey.ser");
+				InputStream buffer = new BufferedInputStream(file);
+				ObjectInputStream input1 = new ObjectInputStream(buffer);
+				secretKey = (HashMap) input1.readObject();
+				System.out.println("in read:: " + secretKey);
+				input1.close();
+				file.close();
+			}
+		}
 	}
 }
