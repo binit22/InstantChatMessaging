@@ -32,8 +32,10 @@ public class ChatServer extends Thread {
 		try {
 			authServerIP = AS;
 
-			if (server == null)
+			if (server == null){
 				server = new DatagramSocket(PORT);
+				server.setReuseAddress(true);	
+			}
 		} catch (SocketException e) {
 			e.printStackTrace();
 		}

@@ -32,6 +32,7 @@ public class AuthServer extends Thread {
 		this.sqlUsername = sqlUsername;
 		// set port number for socket
 		ds = new DatagramSocket(PORT);
+		ds.setReuseAddress(true);
 		this.serverPort = serverPort;
 	}
 
@@ -191,7 +192,8 @@ public class AuthServer extends Thread {
 					else
 						System.out.println("User " + u[1]
 								+ " cannot be verified.");
-					// send packet containing information about user verification
+					// send packet containing information about user
+					// verification
 					sendPacket = new DatagramPacket(sendData, sendData.length,
 							receivePacket.getAddress(), serverPort);
 					ds.send(sendPacket);
@@ -210,6 +212,7 @@ public class AuthServer extends Thread {
 			}
 		}
 	}
+
 	//
 
 	public void run() {

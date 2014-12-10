@@ -69,8 +69,11 @@ public class ChatClient extends Thread {
 
 			// writeKeys();
 			ChatClient.serverIP = serverIP;
-			if (server == null)
+			if (server == null) {
 				server = new DatagramSocket(PORT);
+				server.setReuseAddress(true);
+			}
+
 		} catch (SocketException e) {
 			e.printStackTrace();
 		}
