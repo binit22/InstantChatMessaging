@@ -328,7 +328,7 @@ public class ChatClient extends Thread {
 					readKeys();
 					String msg = decrypt((byte[]) ar.get(1),
 							secretKey.get(ar.get(0)));
-					System.out.println(ar.get(0) + ": " + msg);
+					System.out.println("\n"+ar.get(0) + ": " + msg);
 				} else if (message.contains("verified")) {
 					synchronized (verify) {
 						receiveData = new byte[size];
@@ -530,6 +530,7 @@ public class ChatClient extends Thread {
 
 		FileOutputStream fout = new FileOutputStream("secretkey.ser");
 		ObjectOutputStream oos = new ObjectOutputStream(fout);
+		System.out.println("in write:: "+secretKey);
 		oos.writeObject(secretKey);
 		oos.close();
 		fout.close();
@@ -545,6 +546,7 @@ public class ChatClient extends Thread {
 		InputStream buffer = new BufferedInputStream(file);
 		ObjectInputStream input1 = new ObjectInputStream(buffer);
 		secretKey = (HashMap) input1.readObject();
+		System.out.println("in read:: "+secretKey);
 		input1.close();
 		file.close();
 	}
