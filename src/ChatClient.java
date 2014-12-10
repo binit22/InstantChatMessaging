@@ -537,6 +537,8 @@ public class ChatClient extends Thread {
 					+ "secretkey.ser");
 			ObjectOutputStream oos = new ObjectOutputStream(fout);
 			System.out.println("in write:: " + secretKey);
+			System.out.println("in write:: " + secretKey.get("binit"));
+
 			oos.writeObject(secretKey);
 			oos.close();
 			fout.close();
@@ -557,8 +559,12 @@ public class ChatClient extends Thread {
 				ObjectInputStream input1 = new ObjectInputStream(buffer);
 				secretKey = (HashMap) input1.readObject();
 				System.out.println("in read:: " + secretKey);
+				System.out.println("in read:: " + secretKey.get("binit").getEncoded());
+
 				input1.close();
 				file.close();
+			} else {
+				writeKeys();
 			}
 		}
 	}
