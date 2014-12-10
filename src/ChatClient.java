@@ -65,7 +65,7 @@ public class ChatClient extends Thread {
 	public ChatClient(String type, String serverIP) throws IOException {
 		try {
 			this.type = type;
-		//	writeKeys();
+			// writeKeys();
 			ChatClient.serverIP = serverIP;
 			if (server == null)
 				server = new DatagramSocket(PORT);
@@ -148,19 +148,21 @@ public class ChatClient extends Thread {
 				while (true) {
 					System.out.print("send to? ");
 					String toUsername = inFromUser.readLine();
-					if (!secretKey.containsKey(this.toUser)) {
+					readKeys();
+
+					if (!secretKey.containsKey(toUsername)) {
 						if (this.userExists(toUsername)) {
 							this.toUser = toUsername;
 
 							if (this.startSend) {
 								readKeys();
-								if (!secretKey.containsKey(this.toUser)) {
-									// send public key to other client and set
-									// own
-									// private key
-									sendPublicKey();
-									this.startSend = false;
-								}
+								// if (!secretKey.containsKey(this.toUser)) {
+								// send public key to other client and set
+								// own
+								// private key
+								sendPublicKey();
+								this.startSend = false;
+								// }
 							}
 							break;
 
@@ -168,6 +170,8 @@ public class ChatClient extends Thread {
 							System.out.println("invalid user!");
 							continue;
 						}
+					} else {
+						break;
 					}
 				}
 
