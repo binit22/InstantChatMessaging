@@ -502,7 +502,7 @@ public class ChatClient extends Thread {
 				Console console = null;
 
 				if (System.console() == null) {
-					System.out.println("\npassword: ");
+					System.out.print("\npassword: ");
 					password = inFromUser.readLine();
 				} else {
 					console = System.console();
