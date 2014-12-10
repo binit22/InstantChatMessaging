@@ -65,7 +65,7 @@ public class ChatClient extends Thread {
 	public ChatClient(String type, String serverIP) throws IOException {
 		try {
 			this.type = type;
-			writeKeys();
+		//	writeKeys();
 			ChatClient.serverIP = serverIP;
 			if (server == null)
 				server = new DatagramSocket(PORT);
