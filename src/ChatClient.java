@@ -290,8 +290,8 @@ public class ChatClient extends Thread {
 
 					SecretKeySpec secretKey = combine(myPrivateKey,
 							otherPublicKey);
-					System.out.println("secret key:: "
-							+ Arrays.toString(secretKey.getEncoded()));
+					System.out.println("\nsecret key: "
+							+ Arrays.toString(secretKey.getEncoded())+" \n of "+user+" \n");
 
 					readKeys();
 					ChatClient.secretKey.put(user, secretKey);
@@ -537,9 +537,7 @@ public class ChatClient extends Thread {
 			FileOutputStream fout = new FileOutputStream(myUserName
 					+ "secretkey.ser");
 			ObjectOutputStream oos = new ObjectOutputStream(fout);
-			System.out.println("in write:: " + secretKey);
-			// System.out.println("in write:: " + secretKey.get("binit"));
-
+		
 			oos.writeObject(secretKey);
 			oos.close();
 			fout.close();
@@ -559,12 +557,7 @@ public class ChatClient extends Thread {
 				InputStream buffer = new BufferedInputStream(file);
 				ObjectInputStream input1 = new ObjectInputStream(buffer);
 				secretKey = (HashMap) input1.readObject();
-				System.out.println("in read:: " + secretKey);
-				if (secretKey.containsKey("binit"))
-					System.out.println("in read:: "
-							+ Arrays.toString(secretKey.get("binit")
-									.getEncoded()));
-
+		
 				input1.close();
 				file.close();
 			} else {
