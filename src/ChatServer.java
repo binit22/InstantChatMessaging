@@ -220,6 +220,7 @@ public class ChatServer extends Thread {
 							IPAddress, clientPort);
 					System.out.println("P, G and Public Key transfer from "
 							+ rUser + " to " + user);
+					System.out.println(ar.get(3));
 					server.send(packet);
 
 					ar.set(0, (String) rUser);
@@ -258,6 +259,7 @@ public class ChatServer extends Thread {
 
 					packet = new DatagramPacket(sendData, sendData.length,IPAddress, clientPort);
 					System.out.println("Public Key transfer from " + rUser + " to " + oUser);
+					System.out.println(ar.get(1));
 					server.send(packet);
 
 					ByteArrayOutputStream b = new ByteArrayOutputStream();
