@@ -5,14 +5,11 @@ import java.io.ObjectInput;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
-import java.math.BigInteger;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
-import java.security.PublicKey;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -27,7 +24,7 @@ public class ChatServer extends Thread {
 
 	public static int PORT = 5000;
 	public static int clientPort = 7000;
-	public static String authServerIP = "192.168.198.1";
+	public static String authServerIP = "129.21.146.247";
 	public static int authServerPort = 8000;
 	public static DatagramSocket server = null;
 
@@ -133,6 +130,7 @@ public class ChatServer extends Thread {
 	// }
 	// }
 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public void receive() {
 		String message = "";
 
@@ -149,7 +147,7 @@ public class ChatServer extends Thread {
 				// message command received from either client or server or
 				// bootstrap
 				message = new String(packet.getData()).trim();
-				// System.out.println(message);
+				//				System.out.println("@#$ msg received " + message);
 
 				byte[] sendData = null;
 				// DatagramPacket packet = null;
@@ -160,29 +158,26 @@ public class ChatServer extends Thread {
 					// System.out.println("authenticating");
 					sendMsg = this.verifyUser(message);
 					System.out.println(message.split(SEMICOLON)[1]
-							+ " user is being autheticated.");
+							+ " is being autheticated.");
 					// add username and its IP address in active user list
 					if ("true".equals(sendMsg)) {
 						synchronized (activeUserList) {
-							activeUserList.put(message.split(SEMICOLON)[1],
-									packet.getAddress().getHostAddress());
-							activeIPList.put(packet.getAddress()
-									.getHostAddress(),
-									message.split(SEMICOLON)[1]);
+							activeUserList.put(message.split(SEMICOLON)[1], packet.getAddress().getHostAddress());
+							activeIPList.put(packet.getAddress().getHostAddress(), message.split(SEMICOLON)[1]);
 						}
 					}
 
 					sendData = new byte[size];
 					sendData = sendMsg.getBytes();
 					InetAddress IPAddress = packet.getAddress();
-					packet = new DatagramPacket(sendData, sendData.length,
-							IPAddress, packet.getPort());
+					packet = new DatagramPacket(sendData, sendData.length, IPAddress, packet.getPort());
 					server.send(packet);
 
 				}// authenticate from authentication server for chat
 				else if (message != null && message.contains("verify")) {
-					System.out.println(message.split(SEMICOLON)[1]
-							+ " user is being verified.");
+					InetAddress IPAddress = packet.getAddress();
+
+					System.out.println(message.split(SEMICOLON)[1] + " is being verified.");
 
 					if (activeUserList.containsKey(message.split(SEMICOLON)[1])) {
 						sendMsg = "true";
@@ -190,22 +185,24 @@ public class ChatServer extends Thread {
 						sendMsg = this.userExists(message);
 
 					sendData = new byte[size];
+					sendData = "verified".getBytes();
+					packet = new DatagramPacket(sendData, sendData.length, IPAddress, packet.getPort());
+					server.send(packet);
+
+					sendData = new byte[size];
 					sendData = sendMsg.getBytes();
-					InetAddress IPAddress = packet.getAddress();
-					packet = new DatagramPacket(sendData, sendData.length,
-							IPAddress, packet.getPort());
+					packet = new DatagramPacket(sendData, sendData.length, IPAddress, packet.getPort());
 					server.send(packet);
 				}
 
 				else if (message != null && message.contains("initialkey")) {
 					receiveData = new byte[size];
-					String rUser = activeIPList.get(packet.getAddress()
-							.getHostAddress());
+					String rUser = activeIPList.get(packet.getAddress().getHostAddress());
+
 					// receive key and other username
 					packet = new DatagramPacket(receiveData, receiveData.length);
 					server.receive(packet);
-					ByteArrayInputStream bi = new ByteArrayInputStream(
-							receiveData);
+					ByteArrayInputStream bi = new ByteArrayInputStream(receiveData);
 					ObjectInput oi = new ObjectInputStream(bi);
 
 					ArrayList ar = (ArrayList) oi.readObject();
@@ -215,8 +212,7 @@ public class ChatServer extends Thread {
 
 					sendData = new byte[size];
 					sendData = new String("publickey1").getBytes();
-					InetAddress IPAddress = InetAddress
-							.getByName(activeUserList.get(user));
+					InetAddress IPAddress = InetAddress.getByName(activeUserList.get(user));
 
 					packet = new DatagramPacket(sendData, sendData.length,
 							IPAddress, clientPort);
@@ -244,25 +240,22 @@ public class ChatServer extends Thread {
 					// receive key and other username
 					packet = new DatagramPacket(receiveData, receiveData.length);
 					server.receive(packet);
-					ByteArrayInputStream bi = new ByteArrayInputStream(
-							receiveData);
+					ByteArrayInputStream bi = new ByteArrayInputStream(receiveData);
 					ObjectInput oi = new ObjectInputStream(bi);
 
 					ArrayList ar = (ArrayList) oi.readObject();
-
 					String oUser = (String) ar.get(0);
 					ar.set(0, (String) rUser);
+					bi.close();
+					oi.close();
 
-					InetAddress IPAddress = InetAddress
-							.getByName(activeUserList.get(oUser));
+					InetAddress IPAddress = InetAddress.getByName(activeUserList.get(oUser));
 
 					sendData = new byte[size];
 					sendData = new String("publickey2").getBytes();
 
-					packet = new DatagramPacket(sendData, sendData.length,
-							IPAddress, clientPort);
-					System.out.println("Public Key transfer from " + rUser
-							+ " to " + oUser);
+					packet = new DatagramPacket(sendData, sendData.length,IPAddress, clientPort);
+					System.out.println("Public Key transfer from " + rUser + " to " + oUser);
 					server.send(packet);
 
 					ByteArrayOutputStream b = new ByteArrayOutputStream();
@@ -273,66 +266,39 @@ public class ChatServer extends Thread {
 					o.close();
 					b.close();
 
-					packet = new DatagramPacket(sendData, sendData.length,
-							IPAddress, clientPort);
+					packet = new DatagramPacket(sendData, sendData.length, IPAddress, clientPort);
 					server.send(packet);
 
 				} else if (message != null && message.contains("message")) {
 					packet = new DatagramPacket(receiveData, receiveData.length);
 					server.receive(packet);
 
-					ByteArrayInputStream bi = new ByteArrayInputStream(
-							receiveData);
+					ByteArrayInputStream bi = new ByteArrayInputStream(receiveData);
 					ObjectInput oi = new ObjectInputStream(bi);
 
 					ArrayList ar = (ArrayList) oi.readObject();
 					String oUser = (String) ar.get(0);
+					bi.close();
+					oi.close();
 
-					InetAddress IPAddress = InetAddress
-							.getByName(activeUserList.get(oUser));
+					InetAddress IPAddress = InetAddress.getByName(activeUserList.get(oUser));
 
-					System.out.println("to user " + ar.get(0));
-					// System.out.println(ar.get(0));
-					System.out.println("byte encrypt : " + ar.get(1));
-					System.out.println("from user "
-							+ activeIPList.get(packet.getAddress()
-									.getHostAddress()));
-					String rUser = activeIPList.get(packet.getAddress()
-							.getHostAddress());
+					String rUser = activeIPList.get(packet.getAddress().getHostAddress());
 					ar.set(0, rUser);
 					sendData = "message".getBytes();
-					packet = new DatagramPacket(sendData, sendData.length,
-							IPAddress, clientPort);
-
+					packet = new DatagramPacket(sendData, sendData.length, IPAddress, clientPort);
 					server.send(packet);
 
 					ByteArrayOutputStream b = new ByteArrayOutputStream();
 					ObjectOutput o = new ObjectOutputStream(b);
 					o.writeObject(ar);
-
-					sendData = b.toByteArray();
 					o.close();
 					b.close();
-					System.out.println("Bytes to send to " + oUser
-							+ " having IP " + IPAddress);
-					packet = new DatagramPacket(sendData, sendData.length,
-							IPAddress, clientPort);
-
+					
+					sendData = b.toByteArray();
+					packet = new DatagramPacket(sendData, sendData.length, IPAddress, clientPort);
 					server.send(packet);
-
-				} else {
-					sendData = new byte[size];
-					String[] userMsg = message.split(SEMICOLON);
-
-					sendData = (activeIPList.get(packet.getAddress()
-							.getHostAddress()) + ": " + userMsg[1]).getBytes();
-					InetAddress IPAddress = InetAddress
-							.getByName(activeUserList.get(userMsg[0]));
-					packet = new DatagramPacket(sendData, sendData.length,
-							IPAddress, clientPort);
-					server.send(packet);
-
-				}
+				} 
 
 			} catch (Exception ex) {
 				ex.printStackTrace();
@@ -358,8 +324,7 @@ public class ChatServer extends Thread {
 	}
 
 	private static void usage() {
-		System.err
-				.println("java ChatServer authServerIP \nIf no authentication server is specified default it taken");
+		System.err.println("java ChatServer authServerIP \nIf no authentication server is specified default it taken");
 		throw new IllegalArgumentException();
 	}
 }
