@@ -151,7 +151,7 @@ public class ChatClient extends Thread {
 			while (true) {
 
 				while (true) {
-					System.out.print("send to? ");
+					System.out.print("\nsend to? ");
 					String toUsername = inFromUser.readLine();
 					readKeys();
 
@@ -180,7 +180,7 @@ public class ChatClient extends Thread {
 					}
 				}
 
-				System.out.print("message? ");
+				System.out.print("\nmessage? ");
 				sendMsg = inFromUser.readLine();
 
 				sendData = "message".getBytes();
@@ -512,13 +512,13 @@ public class ChatClient extends Thread {
 				String encryptedPwd = clientSend.genSHA256(password);
 
 				if (clientSend.verifyUser(username, encryptedPwd)) {
-					System.out.println("verified");
+					System.out.println("Authenticated.");
 					myUserName = username;
 					clientSend.start();
 					clientReceive.start();
 					break;
 				} else {
-					System.out.println("could not verify");
+					System.out.println("Could not authenticate you.");
 					continue;
 				}
 			}
