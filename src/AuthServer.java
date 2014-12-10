@@ -11,13 +11,14 @@ import java.sql.Statement;
 import java.util.Scanner;
 
 public class AuthServer extends Thread {
-	String serverAdd="129.21.30.38";
+	String serverAdd = "129.21.30.38";
 	String sqlHost;
 	String sqlUsername;
 	String sqlPassword;
 	DatagramSocket ds;
 	int size = 2048;
 	int serverPort = 8000;
+	int PORT = 5000;
 
 	/**
 	 * 
@@ -31,6 +32,7 @@ public class AuthServer extends Thread {
 		this.sqlPassword = sqlPassword;
 		this.sqlUsername = sqlUsername;
 		// set port number for socket
+		this.PORT = PORT;
 		ds = new DatagramSocket(PORT);
 		ds.setReuseAddress(true);
 		this.serverPort = serverPort;
@@ -113,7 +115,7 @@ public class AuthServer extends Thread {
 		String host = "localhost:3307";
 		String uname = "root";
 		String pass = "";
-		String server = "";
+		String server = "129.21.30.38";
 		// mysql arguments
 		if (args.length == 3) {
 			host = args[0];
@@ -130,6 +132,9 @@ public class AuthServer extends Thread {
 		int serP = Integer.parseInt(sc.nextLine());
 		System.out.println("Enter server IP:");
 		server = sc.nextLine();
+		// int serP=5000;
+		// int PORT=8000;
+
 		AuthServer as = new AuthServer(server, host, uname, pass, PORT, serP);
 		as.start();
 

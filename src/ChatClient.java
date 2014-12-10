@@ -40,12 +40,13 @@ import javax.crypto.spec.DHParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 public class ChatClient extends Thread {
-
+	// default values
 	public final static int size = 2048;
 	public final static String SEMICOLON = ";;";
 	public final static int pValue = 47;
 	public final static int gValue = 71;
 	public static String myUserName = null;
+	// change these as command line arguments if different
 	public static int PORT = 7000;
 	public static String serverIP = "glados.cs.rit.edu";
 	public static int serverPort = 5000;
@@ -63,6 +64,7 @@ public class ChatClient extends Thread {
 	// username, secret key
 	public static Map<String, SecretKeySpec> secretKey = new HashMap<String, SecretKeySpec>();
 
+	// start chat client
 	public ChatClient(String type, String serverIP) throws IOException {
 		try {
 			this.type = type;
@@ -80,6 +82,7 @@ public class ChatClient extends Thread {
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
+	// send public key
 	private void sendPublicKey() {
 
 		byte[] sendData = null;
@@ -95,7 +98,7 @@ public class ChatClient extends Thread {
 			packet = new DatagramPacket(sendData, sendData.length, IPAddress,
 					serverPort);
 			server.send(packet);
-
+			// generating p, g and public key
 			BigInteger p = new BigInteger(Integer.toString(pValue));
 			BigInteger g = new BigInteger(Integer.toString(gValue));
 			int bitLength = 512; // 512 bits
@@ -108,9 +111,12 @@ public class ChatClient extends Thread {
 					.getInstance("DiffieHellman");
 			kpg.initialize(param);
 			keyPair = kpg.generateKeyPair();
-
+			// generate key pair
 			ArrayList key = new ArrayList();
+
+			// send other username, p, g and public key to server
 			key.add(this.toUser);
+
 			key.add(p);
 			key.add(g);
 			key.add(keyPair.getPublic());
@@ -136,6 +142,7 @@ public class ChatClient extends Thread {
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
+	// for sending messages
 	public void send() {
 
 		byte[] sendData = null;
@@ -149,25 +156,23 @@ public class ChatClient extends Thread {
 
 			System.out.println("Start sending messages");
 			while (true) {
-
+				// user to send to
 				while (true) {
 					System.out.print("\nsend to? ");
 					String toUsername = inFromUser.readLine();
 					readKeys();
-
+					// get the key for that user otherwise generate one
 					if (!secretKey.containsKey(toUsername)) {
 						if (this.userExists(toUsername)) {
 							this.toUser = toUsername;
 
 							if (this.startSend) {
 								readKeys();
-								// if (!secretKey.containsKey(this.toUser)) {
 								// send public key to other client and set
 								// own
 								// private key
 								sendPublicKey();
 								this.startSend = false;
-								// }
 							}
 							break;
 
@@ -176,11 +181,11 @@ public class ChatClient extends Thread {
 							continue;
 						}
 					} else {
-						this.toUser=toUsername;
+						this.toUser = toUsername;
 						break;
 					}
 				}
-
+				// message to send
 				System.out.print("\nmessage? ");
 				sendMsg = inFromUser.readLine();
 
@@ -189,7 +194,8 @@ public class ChatClient extends Thread {
 				packet = new DatagramPacket(sendData, sendData.length,
 						IPAddress, serverPort);
 				server.send(packet);
-
+				// encrypt message and send based on secret key that is
+				// generated
 				readKeys();
 				byte[] eMsg = encrypt(sendMsg, secretKey.get(this.toUser));
 
@@ -223,6 +229,7 @@ public class ChatClient extends Thread {
 		}
 	}
 
+	// receiving messages
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public String receive() {
 		String message = "";
@@ -240,7 +247,7 @@ public class ChatClient extends Thread {
 				// message command received from either client or server or
 				// bootstrap
 				message = new String(packet.getData()).trim();
-
+				// receive other users public key and time to make your own key
 				if (message.contains("publickey1")) {
 					receiveData = new byte[size];
 					packet = new DatagramPacket(receiveData, receiveData.length);
@@ -255,7 +262,7 @@ public class ChatClient extends Thread {
 					BigInteger p = (BigInteger) ar.get(1);
 					BigInteger g = (BigInteger) ar.get(2);
 					PublicKey otherPublicKey = (PublicKey) ar.get(3);
-
+					// make your own public key
 					DHParameterSpec param = new DHParameterSpec(p, g);
 					KeyPairGenerator kpg = KeyPairGenerator
 							.getInstance("DiffieHellman");
@@ -290,14 +297,19 @@ public class ChatClient extends Thread {
 
 					SecretKeySpec secretKey = combine(myPrivateKey,
 							otherPublicKey);
+
+					// generated secret key with that user
 					System.out.println("\nsecret key: "
-							+ Arrays.toString(secretKey.getEncoded())+" \n of "+user+" \n");
+							+ Arrays.toString(secretKey.getEncoded())
+							+ " \n of " + user + " \n");
 
 					readKeys();
 					ChatClient.secretKey.put(user, secretKey);
 					writeKeys();
 
-				} else if (message.contains("publickey2")) {
+				}
+				// public key of other user
+				else if (message.contains("publickey2")) {
 					receiveData = new byte[size];
 					packet = new DatagramPacket(receiveData, receiveData.length);
 					server.receive(packet);
@@ -310,7 +322,8 @@ public class ChatClient extends Thread {
 
 					String user = (String) ar.get(0);
 					PublicKey otherPublicKey = (PublicKey) ar.get(1);
-
+					// generate secret based on the other public key and your
+					// public key
 					SecretKeySpec secretKey = combine(privateKey,
 							otherPublicKey);
 					System.out.println("secret key:: "
@@ -320,7 +333,9 @@ public class ChatClient extends Thread {
 					ChatClient.secretKey.put(user, secretKey);
 					writeKeys();
 
-				} else if (message.contains("message")) {
+				}
+				// if message is received
+				else if (message.contains("message")) {
 
 					receiveData = new byte[size];
 					packet = new DatagramPacket(receiveData, receiveData.length);
@@ -332,10 +347,13 @@ public class ChatClient extends Thread {
 					ArrayList ar = (ArrayList) oi.readObject();
 
 					readKeys();
+					// decrypt it and print it
 					String msg = decrypt((byte[]) ar.get(1),
 							secretKey.get(ar.get(0)));
 					System.out.println("\n" + ar.get(0) + ": " + msg);
-				} else if (message.contains("verified")) {
+				}
+				// to verify user
+				else if (message.contains("verified")) {
 					synchronized (verify) {
 						receiveData = new byte[size];
 						packet = new DatagramPacket(receiveData,
@@ -354,6 +372,8 @@ public class ChatClient extends Thread {
 		return message;
 	}
 
+	// to create secrey key by combindign other's public key and your private
+	// key
 	private SecretKeySpec combine(PrivateKey private1, PublicKey public1)
 			throws NoSuchAlgorithmException, InvalidKeyException,
 			IllegalStateException {
@@ -361,9 +381,9 @@ public class ChatClient extends Thread {
 		KeyAgreement ka = KeyAgreement.getInstance("DiffieHellman");
 		ka.init(private1);
 		ka.doPhase(public1, true);
-		byte[] alice_secret = ka.generateSecret();
+		byte[] newsecret = ka.generateSecret();
 
-		SecretKeySpec aes = new SecretKeySpec(alice_secret, "AES");
+		SecretKeySpec aes = new SecretKeySpec(newsecret, "AES");
 
 		MessageDigest md = MessageDigest.getInstance("MD5");
 		md.update(aes.getEncoded());
@@ -373,6 +393,7 @@ public class ChatClient extends Thread {
 		return key;
 	}
 
+	// sha256 on the password
 	public String genSHA256(String original) throws NoSuchAlgorithmException {
 
 		MessageDigest md = MessageDigest.getInstance("SHA-256");
@@ -385,6 +406,7 @@ public class ChatClient extends Thread {
 		return sb.toString();
 	}
 
+	// to verify username and password from server
 	public boolean verifyUser(String username, String password) {
 
 		String reply = null;
@@ -419,6 +441,7 @@ public class ChatClient extends Thread {
 			return false;
 	}
 
+	// check if user exists from server
 	public boolean userExists(String username) {
 
 		byte[] data = null;
@@ -455,6 +478,7 @@ public class ChatClient extends Thread {
 			this.receive();
 	}
 
+	// encrypt string to bytes with AES key
 	public byte[] encrypt(String input, SecretKeySpec key)
 			throws NoSuchAlgorithmException, NoSuchPaddingException,
 			IllegalBlockSizeException, BadPaddingException, InvalidKeyException {
@@ -465,6 +489,7 @@ public class ChatClient extends Thread {
 		return encryptedMessageInBytes;
 	}
 
+	// decrypt message in bytes to string with AES secret key
 	public String decrypt(byte[] encryptedMessageInBytes, SecretKeySpec key)
 			throws NoSuchAlgorithmException, NoSuchPaddingException,
 			IllegalBlockSizeException, BadPaddingException, InvalidKeyException {
@@ -475,6 +500,7 @@ public class ChatClient extends Thread {
 		return new String(decryptedTextBytes);
 	}
 
+	// usage message
 	public static void usage() {
 		System.err.println("java ChatClient SERVERADDRESS");
 		System.err
@@ -482,6 +508,7 @@ public class ChatClient extends Thread {
 		throw new IllegalArgumentException();
 	}
 
+	// main function
 	public static void main(String[] args) {
 		try {
 
@@ -532,21 +559,20 @@ public class ChatClient extends Thread {
 		}
 	}
 
+	// write keys to serializable file
 	public static void writeKeys() throws IOException {
 		if (myUserName != null) {
 			FileOutputStream fout = new FileOutputStream(myUserName
 					+ "secretkey.ser");
 			ObjectOutputStream oos = new ObjectOutputStream(fout);
-		
+
 			oos.writeObject(secretKey);
 			oos.close();
 			fout.close();
 		}
 	}
 
-	/*
-	 * function to peer info
-	 */
+	// read keys from serializable file
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public static void readKeys() throws ClassNotFoundException, IOException {
 		if (myUserName != null) {
@@ -557,7 +583,7 @@ public class ChatClient extends Thread {
 				InputStream buffer = new BufferedInputStream(file);
 				ObjectInputStream input1 = new ObjectInputStream(buffer);
 				secretKey = (HashMap) input1.readObject();
-		
+
 				input1.close();
 				file.close();
 			} else {

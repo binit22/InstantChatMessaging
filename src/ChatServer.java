@@ -21,20 +21,22 @@ public class ChatServer extends Thread {
 	public String type;
 	public Map<String, String> activeUserList = new HashMap<String, String>();
 	public Map<String, String> activeIPList = new HashMap<String, String>();
-
+	// Default values should specify as command line arguments incase it is
+	// different
 	public static int PORT = 5000;
 	public static int clientPort = 7000;
-	public static String authServerIP = "129.21.144.67";
+	public static String authServerIP = "129.21.145.211";
 	public static int authServerPort = 8000;
 	public static DatagramSocket server = null;
 
+	// constructor for each server task
 	public ChatServer(String AS) {
 		try {
 			authServerIP = AS;
 
-			if (server == null){
+			if (server == null) {
 				server = new DatagramSocket(PORT);
-				server.setReuseAddress(true);	
+				server.setReuseAddress(true);
 			}
 		} catch (SocketException e) {
 			e.printStackTrace();
@@ -43,7 +45,7 @@ public class ChatServer extends Thread {
 
 	// to login
 	public String verifyUser(String user) {
-
+		// verify from authentication server
 		String reply = null;
 		byte[] data = null;
 		DatagramPacket packet = null;
@@ -62,7 +64,6 @@ public class ChatServer extends Thread {
 			server.receive(packet);
 
 			reply = new String(packet.getData()).trim();
-			// System.out.println(reply);
 		} catch (IOException ex) {
 			ex.printStackTrace();
 		} catch (Exception ex) {
@@ -73,7 +74,7 @@ public class ChatServer extends Thread {
 
 	// to chat with the user
 	public String userExists(String username) {
-
+		// check if valid user from authentication server before chatting
 		String reply = null;
 		byte[] data = null;
 		DatagramPacket packet = null;
@@ -92,7 +93,6 @@ public class ChatServer extends Thread {
 			server.receive(packet);
 
 			reply = new String(packet.getData()).trim();
-			// System.out.println(reply);
 		} catch (IOException ex) {
 			ex.printStackTrace();
 		} catch (Exception ex) {
@@ -101,39 +101,10 @@ public class ChatServer extends Thread {
 		return reply;
 	}
 
-	// public void send(){
-	//
-	// try{
-	// BufferedReader inFromUser = new BufferedReader(new
-	// InputStreamReader(System.in));
-	//
-	// byte[] sendData = null;
-	// DatagramPacket packet = null;
-	// String sendMsg = "";
-	//
-	// while(true){
-	// sendMsg = inFromUser.readLine();
-	//
-	// sendData = new byte[size];
-	// sendData = sendMsg.getBytes();
-	// InetAddress IPAddress = InetAddress.getByName("localhost");
-	// packet = new DatagramPacket(sendData, sendData.length, IPAddress,
-	// clientPort);
-	// server.send(packet);
-	// }
-	//
-	// } catch(IOException ex){
-	// ex.printStackTrace();
-	// } catch(Exception ex){
-	// ex.printStackTrace();
-	// } finally{
-	// if(server != null)
-	// server.close();
-	// }
-	// }
-
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public void receive() {
+
+		// for receiving messages
 		String message = "";
 
 		byte[] receiveData = null;
@@ -149,7 +120,7 @@ public class ChatServer extends Thread {
 				// message command received from either client or server or
 				// bootstrap
 				message = new String(packet.getData()).trim();
-				//				System.out.println("@#$ msg received " + message);
+				// System.out.println("@#$ msg received " + message);
 
 				byte[] sendData = null;
 				// DatagramPacket packet = null;
@@ -164,22 +135,27 @@ public class ChatServer extends Thread {
 					// add username and its IP address in active user list
 					if ("true".equals(sendMsg)) {
 						synchronized (activeUserList) {
-							activeUserList.put(message.split(SEMICOLON)[1], packet.getAddress().getHostAddress());
-							activeIPList.put(packet.getAddress().getHostAddress(), message.split(SEMICOLON)[1]);
+							activeUserList.put(message.split(SEMICOLON)[1],
+									packet.getAddress().getHostAddress());
+							activeIPList.put(packet.getAddress()
+									.getHostAddress(),
+									message.split(SEMICOLON)[1]);
 						}
 					}
 
 					sendData = new byte[size];
 					sendData = sendMsg.getBytes();
 					InetAddress IPAddress = packet.getAddress();
-					packet = new DatagramPacket(sendData, sendData.length, IPAddress, packet.getPort());
+					packet = new DatagramPacket(sendData, sendData.length,
+							IPAddress, packet.getPort());
 					server.send(packet);
 
 				}// authenticate from authentication server for chat
 				else if (message != null && message.contains("verify")) {
 					InetAddress IPAddress = packet.getAddress();
 
-					System.out.println(message.split(SEMICOLON)[1] + " is being verified.");
+					System.out.println(message.split(SEMICOLON)[1]
+							+ " is being verified.");
 
 					if (activeUserList.containsKey(message.split(SEMICOLON)[1])) {
 						sendMsg = "true";
@@ -188,23 +164,27 @@ public class ChatServer extends Thread {
 
 					sendData = new byte[size];
 					sendData = "verified".getBytes();
-					packet = new DatagramPacket(sendData, sendData.length, IPAddress, packet.getPort());
+					packet = new DatagramPacket(sendData, sendData.length,
+							IPAddress, packet.getPort());
 					server.send(packet);
 
 					sendData = new byte[size];
 					sendData = sendMsg.getBytes();
-					packet = new DatagramPacket(sendData, sendData.length, IPAddress, packet.getPort());
+					packet = new DatagramPacket(sendData, sendData.length,
+							IPAddress, packet.getPort());
 					server.send(packet);
 				}
-
+				// when first key is sent
 				else if (message != null && message.contains("initialkey")) {
 					receiveData = new byte[size];
-					String rUser = activeIPList.get(packet.getAddress().getHostAddress());
+					String rUser = activeIPList.get(packet.getAddress()
+							.getHostAddress());
 
 					// receive key and other username
 					packet = new DatagramPacket(receiveData, receiveData.length);
 					server.receive(packet);
-					ByteArrayInputStream bi = new ByteArrayInputStream(receiveData);
+					ByteArrayInputStream bi = new ByteArrayInputStream(
+							receiveData);
 					ObjectInput oi = new ObjectInputStream(bi);
 
 					ArrayList ar = (ArrayList) oi.readObject();
@@ -214,7 +194,8 @@ public class ChatServer extends Thread {
 
 					sendData = new byte[size];
 					sendData = new String("publickey1").getBytes();
-					InetAddress IPAddress = InetAddress.getByName(activeUserList.get(user));
+					InetAddress IPAddress = InetAddress
+							.getByName(activeUserList.get(user));
 
 					packet = new DatagramPacket(sendData, sendData.length,
 							IPAddress, clientPort);
@@ -236,14 +217,17 @@ public class ChatServer extends Thread {
 							IPAddress, clientPort);
 					server.send(packet);
 
-				} else if (message != null && message.contains("nextkey")) {
+				}
+				// for the next key being sent
+				else if (message != null && message.contains("nextkey")) {
 					receiveData = new byte[size];
 					String rUser = activeIPList.get(packet.getAddress()
 							.getHostAddress());
 					// receive key and other username
 					packet = new DatagramPacket(receiveData, receiveData.length);
 					server.receive(packet);
-					ByteArrayInputStream bi = new ByteArrayInputStream(receiveData);
+					ByteArrayInputStream bi = new ByteArrayInputStream(
+							receiveData);
 					ObjectInput oi = new ObjectInputStream(bi);
 
 					ArrayList ar = (ArrayList) oi.readObject();
@@ -252,13 +236,16 @@ public class ChatServer extends Thread {
 					bi.close();
 					oi.close();
 
-					InetAddress IPAddress = InetAddress.getByName(activeUserList.get(oUser));
+					InetAddress IPAddress = InetAddress
+							.getByName(activeUserList.get(oUser));
 
 					sendData = new byte[size];
 					sendData = new String("publickey2").getBytes();
 
-					packet = new DatagramPacket(sendData, sendData.length,IPAddress, clientPort);
-					System.out.println("Public Key transfer from " + rUser + " to " + oUser);
+					packet = new DatagramPacket(sendData, sendData.length,
+							IPAddress, clientPort);
+					System.out.println("Public Key transfer from " + rUser
+							+ " to " + oUser);
 					System.out.println(ar.get(1));
 					server.send(packet);
 
@@ -270,14 +257,18 @@ public class ChatServer extends Thread {
 					o.close();
 					b.close();
 
-					packet = new DatagramPacket(sendData, sendData.length, IPAddress, clientPort);
+					packet = new DatagramPacket(sendData, sendData.length,
+							IPAddress, clientPort);
 					server.send(packet);
 
-				} else if (message != null && message.contains("message")) {
+				}
+				// when message is received from a user
+				else if (message != null && message.contains("message")) {
 					packet = new DatagramPacket(receiveData, receiveData.length);
 					server.receive(packet);
-
-					ByteArrayInputStream bi = new ByteArrayInputStream(receiveData);
+					// send message to the other user
+					ByteArrayInputStream bi = new ByteArrayInputStream(
+							receiveData);
 					ObjectInput oi = new ObjectInputStream(bi);
 
 					ArrayList ar = (ArrayList) oi.readObject();
@@ -285,12 +276,15 @@ public class ChatServer extends Thread {
 					bi.close();
 					oi.close();
 
-					InetAddress IPAddress = InetAddress.getByName(activeUserList.get(oUser));
+					InetAddress IPAddress = InetAddress
+							.getByName(activeUserList.get(oUser));
 
-					String rUser = activeIPList.get(packet.getAddress().getHostAddress());
+					String rUser = activeIPList.get(packet.getAddress()
+							.getHostAddress());
 					ar.set(0, rUser);
 					sendData = "message".getBytes();
-					packet = new DatagramPacket(sendData, sendData.length, IPAddress, clientPort);
+					packet = new DatagramPacket(sendData, sendData.length,
+							IPAddress, clientPort);
 					server.send(packet);
 
 					ByteArrayOutputStream b = new ByteArrayOutputStream();
@@ -298,11 +292,12 @@ public class ChatServer extends Thread {
 					o.writeObject(ar);
 					o.close();
 					b.close();
-					
+
 					sendData = b.toByteArray();
-					packet = new DatagramPacket(sendData, sendData.length, IPAddress, clientPort);
+					packet = new DatagramPacket(sendData, sendData.length,
+							IPAddress, clientPort);
 					server.send(packet);
-				} 
+				}
 
 			} catch (Exception ex) {
 				ex.printStackTrace();
@@ -315,6 +310,10 @@ public class ChatServer extends Thread {
 		this.receive();
 	}
 
+	/**
+	 * Main function
+	 */
+
 	public static void main(String[] args) {
 		if (args.length == 1)
 			authServerIP = args[0];
@@ -322,13 +321,12 @@ public class ChatServer extends Thread {
 			usage();
 		ChatServer receive = new ChatServer(authServerIP);
 		receive.start();
-		// receive.send();
-		//
 
 	}
 
 	private static void usage() {
-		System.err.println("java ChatServer authServerIP \nIf no authentication server is specified default it taken");
+		System.err
+				.println("java ChatServer authServerIP \nIf no authentication server is specified default it taken");
 		throw new IllegalArgumentException();
 	}
 }
